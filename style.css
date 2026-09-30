@@ -216,3 +216,22 @@ select {
     font-size: 15px;
   }
 }
+
+/* FASTING HISTORY CARDS */
+
+.history-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+
+  padding: 15px 5px;
+
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.history-time {
+  margin-top: 5px;
+  color: #6b7280;
+  font-size: 14px;
+}
