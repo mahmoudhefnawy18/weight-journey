@@ -147,8 +147,15 @@ function showActiveFast() {
   startFastBtn.hidden =
     true;
 
-  stopFastBtn.hidden =
-    false;
+startFastBtn.hidden =
+  false;
+
+
+// Refresh fasting statistics and history
+
+await loadFastingHistory();
+
+}
 
 
   updateFastTimer();
