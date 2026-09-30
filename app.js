@@ -147,22 +147,19 @@ function showActiveFast() {
   startFastBtn.hidden =
     true;
 
-startFastBtn.hidden =
-  false;
-
-
-// Refresh fasting statistics and history
-
-await loadFastingHistory();
-
-}
+  stopFastBtn.hidden =
+    false;
 
 
   updateFastTimer();
 
 
   if (timerInterval) {
-    clearInterval(timerInterval);
+
+    clearInterval(
+      timerInterval
+    );
+
   }
 
 
@@ -173,7 +170,6 @@ await loadFastingHistory();
     );
 
 }
-
 
 // ----------------------------------------
 // START FAST
@@ -328,11 +324,15 @@ async function stopFast() {
     "Stop Fast";
 
 
-  startFastBtn.hidden =
-    false;
+ startFastBtn.hidden =
+  false;
+
+
+// Refresh fasting statistics and history
+
+await loadFastingHistory();
 
 }
-
 // ----------------------------------------
 // BUTTON
 // ----------------------------------------
@@ -350,7 +350,65 @@ stopFastBtn.addEventListener(
 // ----------------------------------------
 // LOAD ACTIVE FAST
 // ----------------------------------------
+async function loadActiveFast() {
 
+  const { data, error } =
+    await db
+      .from("fasting_sessions")
+      .select("*")
+      .is(
+        "ended_at",
+        null
+      )
+      .order(
+        "started_at",
+        {
+          ascending: false
+        }
+      )
+      .limit(1)
+      .maybeSingle();
+
+
+  if (error) {
+
+    console.error(
+      "Unable to load active fast:",
+      error
+    );
+
+    return;
+  }
+
+
+  if (!data) {
+
+    activeFast =
+      null;
+
+    fastTimer.textContent =
+      "00:00:00";
+
+    fastStatus.textContent =
+      "Not fasting";
+
+    startFastBtn.hidden =
+      false;
+
+    stopFastBtn.hidden =
+      true;
+
+    return;
+  }
+
+
+  activeFast =
+    data;
+
+
+  showActiveFast();
+
+}
 // ========================================
 // FASTING HISTORY
 // ========================================
@@ -604,63 +662,6 @@ async function loadFastingHistory() {
   });
 
 }
-
-async function loadActiveFast() {
-
-  const { data, error } =
-    await db
-      .from("fasting_sessions")
-      .select("*")
-      .is("ended_at", null)
-      .order(
-        "started_at",
-        {
-          ascending: false
-        }
-      )
-      .limit(1)
-      .maybeSingle();
-
-
-  if (error) {
-
-    console.error(
-      "Unable to load active fast:",
-      error
-    );
-
-    return;
-  }
-
-
-  if (data) {
-
-    activeFast =
-      data;
-
-    showActiveFast();
-
-  } else {
-
-    activeFast =
-      null;
-
-    fastTimer.textContent =
-      "00:00:00";
-
-    fastStatus.textContent =
-      "Not fasting";
-
-    startFastBtn.hidden =
-      false;
-
-    stopFastBtn.hidden =
-      true;
-
-  }
-
-}
-
 
 // ----------------------------------------
 // LOAD APP
@@ -1001,41 +1002,6 @@ async function loadWeights() {
     return;
   }
 
-  async function deleteWeight(id) {
-
-  const confirmed =
-    confirm(
-      "Delete this weight entry?"
-    );
-
-  if (!confirmed) {
-    return;
-  }
-
-  const { error } =
-    await db
-      .from("weight_entries")
-      .delete()
-      .eq(
-        "id",
-        id
-      );
-
-  if (error) {
-
-    console.error(error);
-
-    alert(
-      "Unable to delete weight."
-    );
-
-    return;
-  }
-
-  await loadWeights();
-
-}
-
   // --------------------------------------
   // CURRENT WEIGHT
   // --------------------------------------
@@ -1148,6 +1114,7 @@ async function loadWeights() {
 // --------------------------------------
 
 drawWeightChart(data);
+
 // --------------------------------------
 // WEIGHT HISTORY
 // --------------------------------------
@@ -1163,9 +1130,120 @@ data.forEach(entry => {
       "div"
     );
 
-
   card.className =
     "history-card";
+
+
+  const date =
+    new Date(
+      entry.recorded_at
+    );
+
+
+  const dateText =
+    date.toLocaleDateString(
+      "en-GB",
+      {
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+      }
+    );
+
+
+  const timeText =
+    date.toLocaleTimeString(
+      "en-GB",
+      {
+        hour: "2-digit",
+        minute: "2-digit"
+      }
+    );
+
+
+  card.innerHTML =
+    "<div>" +
+
+      "<strong>" +
+        dateText +
+      "</strong>" +
+
+      "<div class='history-time'>" +
+        timeText +
+      "</div>" +
+
+    "</div>" +
+
+    "<div class='history-right'>" +
+
+      "<strong>" +
+        Number(
+          entry.weight_kg
+        ).toFixed(1) +
+        " kg" +
+      "</strong>" +
+
+      "<button " +
+        "class='delete-entry-btn' " +
+        "onclick='deleteWeight(" +
+        entry.id +
+        ")'>" +
+        "Delete" +
+      "</button>" +
+
+    "</div>";
+
+
+  weightHistory.appendChild(
+    card
+  );
+
+});
+
+
+}
+
+// ----------------------------------------
+// DELETE WEIGHT
+// ----------------------------------------
+
+async function deleteWeight(id) {
+
+  const confirmed =
+    confirm(
+      "Delete this weight entry?"
+    );
+
+  if (!confirmed) {
+    return;
+  }
+
+
+  const { error } =
+    await db
+      .from("weight_entries")
+      .delete()
+      .eq(
+        "id",
+        id
+      );
+
+
+  if (error) {
+
+    console.error(error);
+
+    alert(
+      "Unable to delete weight."
+    );
+
+    return;
+  }
+
+
+  await loadWeights();
+
+}
 
 // ----------------------------------------
 // WEIGHT BUTTON
