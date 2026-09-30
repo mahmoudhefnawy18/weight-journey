@@ -679,6 +679,9 @@ const HEIGHT_CM = 180;
 const weightInput =
   document.getElementById("weightInput");
 
+const weightDate =
+  document.getElementById("weightDate");
+
 const saveWeightBtn =
   document.getElementById("saveWeightBtn");
 
@@ -702,6 +705,29 @@ const weightChange =
 
 const weightHistory =
   document.getElementById("weightHistory");
+
+function setDefaultWeightDate() {
+
+  const now =
+    new Date();
+
+  const offset =
+    now.getTimezoneOffset();
+
+  const localTime =
+    new Date(
+      now.getTime() -
+      offset * 60000
+    );
+
+  weightDate.value =
+    localTime
+      .toISOString()
+      .slice(0, 16);
+
+}
+
+setDefaultWeightDate();
 
 
 // ----------------------------------------
@@ -742,7 +768,11 @@ async function saveWeight() {
       .insert({
         weight_kg: weight,
         recorded_at:
-          new Date().toISOString()
+  weightDate.value
+    ? new Date(
+        weightDate.value
+      ).toISOString()
+    : new Date().toISOString()
       });
 
 
@@ -765,6 +795,8 @@ async function saveWeight() {
 
   weightInput.value =
     "";
+
+  setDefaultWeightDate();
 
   weightMessage.textContent =
     "Weight saved";
