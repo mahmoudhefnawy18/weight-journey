@@ -1,3 +1,16 @@
+const SUPABASE_URL =
+  "https://epdinlgqlxfezrjjyhmk.supabase.co/rest/v1/";
+
+const SUPABASE_KEY =
+  "https://epdinlgqlxfezrjjyhmk.supabase.co/rest/v1/";
+
+
+const db =
+  supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+
 const tabs =
   document.querySelectorAll(".tab");
 
