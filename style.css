@@ -235,3 +235,127 @@ select {
   color: #6b7280;
   font-size: 14px;
 }
+
+/* ========================================
+   WEIGHT TRACKING
+======================================== */
+
+.weight-main-card {
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 22px;
+  padding: 28px 20px;
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.card-label {
+  display: block;
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.current-weight {
+  font-size: 46px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.current-weight small {
+  font-size: 18px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.weight-change {
+  margin-top: 10px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+
+/* WEIGHT STAT CARDS */
+
+.weight-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+
+/* ENTRY CARD */
+
+.entry-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  padding: 20px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.entry-card h3 {
+  margin: 0 0 18px;
+}
+
+.weight-input-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 15px;
+}
+
+.weight-input-row input {
+  width: 150px;
+  padding: 13px;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  font-size: 18px;
+  text-align: center;
+}
+
+.weight-input-row span {
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.entry-message {
+  min-height: 20px;
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+
+/* WEIGHT CHART */
+
+.weight-chart-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  padding: 18px;
+  margin-bottom: 30px;
+}
+
+.weight-chart-card h3 {
+  text-align: center;
+  margin: 0 0 15px;
+}
+
+#weightChart {
+  width: 100%;
+  max-height: 300px;
+}
+
+
+/* WEIGHT HISTORY */
+
+#weightHistory {
+  border-top: 1px solid #e5e7eb;
+}
+
+#weightHistory p {
+  text-align: center;
+  color: #9ca3af;
+}
