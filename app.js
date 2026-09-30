@@ -786,6 +786,138 @@ async function saveWeight() {
 // LOAD WEIGHTS
 // ----------------------------------------
 
+let weightChartInstance = null;
+
+
+function drawWeightChart(entries) {
+
+  const canvas =
+    document.getElementById(
+      "weightChart"
+    );
+
+
+  if (!canvas) {
+    return;
+  }
+
+
+  // Oldest → newest for the graph
+
+  const chartData =
+    [...entries].reverse();
+
+
+  const labels =
+    chartData.map(entry => {
+
+      const date =
+        new Date(
+          entry.recorded_at
+        );
+
+      return date.toLocaleDateString(
+        "en-GB",
+        {
+          day: "2-digit",
+          month: "short"
+        }
+      );
+
+    });
+
+
+  const weights =
+    chartData.map(
+      entry =>
+        Number(
+          entry.weight_kg
+        )
+    );
+
+
+  if (weightChartInstance) {
+
+    weightChartInstance.destroy();
+
+  }
+
+
+  weightChartInstance =
+    new Chart(
+      canvas,
+      {
+        type: "line",
+
+        data: {
+          labels: labels,
+
+          datasets: [
+            {
+              label: "Weight (kg)",
+              data: weights,
+              tension: 0.25,
+              pointRadius: 4,
+              pointHoverRadius: 6
+            }
+          ]
+        },
+
+        options: {
+
+          responsive: true,
+
+          maintainAspectRatio: false,
+
+          interaction: {
+            intersect: false,
+            mode: "index"
+          },
+
+          plugins: {
+
+            legend: {
+              display: false
+            },
+
+            tooltip: {
+              callbacks: {
+
+                label: function(context) {
+
+                  return (
+                    context.parsed.y
+                      .toFixed(1) +
+                    " kg"
+                  );
+
+                }
+
+              }
+            }
+
+          },
+
+          scales: {
+
+            y: {
+
+              title: {
+                display: true,
+                text: "Weight (kg)"
+              }
+
+            }
+
+          }
+
+        }
+
+      }
+    );
+
+}
+
 async function loadWeights() {
 
   const { data, error } =
@@ -945,7 +1077,11 @@ async function loadWeights() {
 
   }
 
+// --------------------------------------
+// WEIGHT GRAPH
+// --------------------------------------
 
+drawWeightChart(data);
   // --------------------------------------
   // WEIGHT HISTORY
   // --------------------------------------
