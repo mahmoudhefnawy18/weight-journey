@@ -359,3 +359,22 @@ select {
   text-align: center;
   color: #9ca3af;
 }
+
+.history-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.delete-entry-btn {
+  border: none;
+  background: transparent;
+  color: #dc2626;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 5px;
+}
+
+.delete-entry-btn:hover {
+  text-decoration: underline;
+}
