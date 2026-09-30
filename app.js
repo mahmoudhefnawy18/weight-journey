@@ -1001,6 +1001,40 @@ async function loadWeights() {
     return;
   }
 
+  async function deleteWeight(id) {
+
+  const confirmed =
+    confirm(
+      "Delete this weight entry?"
+    );
+
+  if (!confirmed) {
+    return;
+  }
+
+  const { error } =
+    await db
+      .from("weight_entries")
+      .delete()
+      .eq(
+        "id",
+        id
+      );
+
+  if (error) {
+
+    console.error(error);
+
+    alert(
+      "Unable to delete weight."
+    );
+
+    return;
+  }
+
+  await loadWeights();
+
+}
 
   // --------------------------------------
   // CURRENT WEIGHT
@@ -1114,79 +1148,24 @@ async function loadWeights() {
 // --------------------------------------
 
 drawWeightChart(data);
-  // --------------------------------------
-  // WEIGHT HISTORY
-  // --------------------------------------
+// --------------------------------------
+// WEIGHT HISTORY
+// --------------------------------------
 
-  weightHistory.innerHTML =
-    "";
-
-
-  data.forEach(entry => {
-
-    const card =
-      document.createElement(
-        "div"
-      );
+weightHistory.innerHTML =
+  "";
 
 
-    card.className =
-      "history-card";
+data.forEach(entry => {
 
-
-    const date =
-      new Date(
-        entry.recorded_at
-      );
-
-
-    const dateText =
-      date.toLocaleDateString(
-        "en-GB",
-        {
-          day: "2-digit",
-          month: "short",
-          year: "numeric"
-        }
-      );
-
-
-    const timeText =
-      date.toLocaleTimeString(
-        "en-GB",
-        {
-          hour: "2-digit",
-          minute: "2-digit"
-        }
-      );
-
-
-    card.innerHTML =
-      "<div>" +
-        "<strong>" +
-          dateText +
-        "</strong>" +
-        "<div class='history-time'>" +
-          timeText +
-        "</div>" +
-      "</div>" +
-
-      "<strong>" +
-        Number(
-          entry.weight_kg
-        ).toFixed(1) +
-        " kg" +
-      "</strong>";
-
-
-    weightHistory.appendChild(
-      card
+  const card =
+    document.createElement(
+      "div"
     );
 
-  });
 
-}
-
+  card.className =
+    "history-card";
 
 // ----------------------------------------
 // WEIGHT BUTTON
