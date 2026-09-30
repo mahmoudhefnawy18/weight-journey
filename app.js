@@ -344,6 +344,260 @@ stopFastBtn.addEventListener(
 // LOAD ACTIVE FAST
 // ----------------------------------------
 
+// ========================================
+// FASTING HISTORY
+// ========================================
+
+async function loadFastingHistory() {
+
+  const historyArea =
+    document.getElementById(
+      "fastingHistory"
+    );
+
+  const lastFast =
+    document.getElementById(
+      "lastFast"
+    );
+
+  const averageFast =
+    document.getElementById(
+      "averageFast"
+    );
+
+  const longestFast =
+    document.getElementById(
+      "longestFast"
+    );
+
+
+  const { data, error } =
+    await db
+      .from("fasting_sessions")
+      .select("*")
+      .not("ended_at", "is", null)
+      .order(
+        "started_at",
+        {
+          ascending: false
+        }
+      );
+
+
+  if (error) {
+
+    console.error(
+      "Unable to load fasting history:",
+      error
+    );
+
+    historyArea.innerHTML =
+      "<p>Unable to load fasting history.</p>";
+
+    return;
+  }
+
+
+  if (
+    !data ||
+    data.length === 0
+  ) {
+
+    historyArea.innerHTML =
+      "<p>No completed fasts yet.</p>";
+
+    lastFast.textContent = "—";
+    averageFast.textContent = "—";
+    longestFast.textContent = "—";
+
+    return;
+  }
+
+
+  // --------------------------------------
+  // CALCULATE DURATIONS
+  // --------------------------------------
+
+  const sessions =
+    data.map(session => {
+
+      const start =
+        new Date(
+          session.started_at
+        );
+
+      const end =
+        new Date(
+          session.ended_at
+        );
+
+      const durationMinutes =
+        Math.round(
+          (end - start) /
+          60000
+        );
+
+
+      return {
+        ...session,
+        start,
+        end,
+        durationMinutes
+      };
+
+    });
+
+
+  function formatMinutes(minutes) {
+
+    const hours =
+      Math.floor(
+        minutes / 60
+      );
+
+    const mins =
+      minutes % 60;
+
+
+    return (
+      hours +
+      "h " +
+      mins +
+      "m"
+    );
+
+  }
+
+
+  // --------------------------------------
+  // STATISTICS
+  // --------------------------------------
+
+  lastFast.textContent =
+    formatMinutes(
+      sessions[0]
+        .durationMinutes
+    );
+
+
+  const totalMinutes =
+    sessions.reduce(
+      (total, session) =>
+        total +
+        session.durationMinutes,
+      0
+    );
+
+
+  const averageMinutes =
+    Math.round(
+      totalMinutes /
+      sessions.length
+    );
+
+
+  averageFast.textContent =
+    formatMinutes(
+      averageMinutes
+    );
+
+
+  const longestMinutes =
+    Math.max(
+      ...sessions.map(
+        session =>
+          session.durationMinutes
+      )
+    );
+
+
+  longestFast.textContent =
+    formatMinutes(
+      longestMinutes
+    );
+
+
+  // --------------------------------------
+  // HISTORY
+  // --------------------------------------
+
+  historyArea.innerHTML =
+    "";
+
+
+  sessions.forEach(session => {
+
+    const card =
+      document.createElement(
+        "div"
+      );
+
+
+    card.className =
+      "history-card";
+
+
+    const date =
+      session.start
+        .toLocaleDateString(
+          "en-GB",
+          {
+            day: "2-digit",
+            month: "short",
+            year: "numeric"
+          }
+        );
+
+
+    const startTime =
+      session.start
+        .toLocaleTimeString(
+          "en-GB",
+          {
+            hour: "2-digit",
+            minute: "2-digit"
+          }
+        );
+
+
+    const endTime =
+      session.end
+        .toLocaleTimeString(
+          "en-GB",
+          {
+            hour: "2-digit",
+            minute: "2-digit"
+          }
+        );
+
+
+    card.innerHTML =
+      "<div>" +
+        "<strong>" +
+          date +
+        "</strong>" +
+        "<div class='history-time'>" +
+          startTime +
+          " → " +
+          endTime +
+        "</div>" +
+      "</div>" +
+
+      "<strong>" +
+        formatMinutes(
+          session.durationMinutes
+        ) +
+      "</strong>";
+
+
+    historyArea.appendChild(
+      card
+    );
+
+  });
+
+}
+
 async function loadActiveFast() {
 
   const { data, error } =
@@ -406,3 +660,4 @@ async function loadActiveFast() {
 // ----------------------------------------
 
 loadActiveFast();
+loadFastingHistory();
