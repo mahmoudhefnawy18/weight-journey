@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Weight Journey</title>
+
+  <link
+    rel="stylesheet"
+    href="style.css"
+  >
+</head>
+
+<body>
+
+  <main class="app">
+
+    <header class="app-header">
+      <h1>Weight Journey</h1>
+      <p>My progress, one day at a time</p>
+    </header>
+
+
+    <!-- Navigation -->
+
+    <nav class="tabs">
+
+      <button
+        class="tab active"
+        data-tab="fasting"
+      >
+        Fasting
+      </button>
+
+      <button
+        class="tab"
+        data-tab="weight"
+      >
+        Weight
+      </button>
+
+      <button
+        class="tab"
+        data-tab="calories"
+      >
+        Calories
+      </button>
+
+      <button
+        class="tab"
+        data-tab="summary"
+      >
+        Summary
+      </button>
+
+    </nav>
+
+
+    <!-- FASTING -->
+
+    <section
+      id="fasting"
+      class="tab-content active"
+    >
+
+      <h2>Current Fast</h2>
+
+      <div class="fast-card">
+
+        <div
+          id="fastTimer"
+          class="fast-timer"
+        >
+          00:00:00
+        </div>
+
+        <div
+          id="fastStatus"
+          class="fast-status"
+        >
+          Not fasting
+        </div>
+
+        <button
+          id="startFastBtn"
+          class="main-button"
+        >
+          Start Fast
+        </button>
+
+        <button
+          id="stopFastBtn"
+          class="main-button stop-button"
+          hidden
+        >
+          Stop Fast
+        </button>
+
+      </div>
+
+
+      <div class="fast-stats">
+
+        <div class="stat-card">
+          <span>Last Fast</span>
+          <strong id="lastFast">—</strong>
+        </div>
+
+        <div class="stat-card">
+          <span>Average Fast</span>
+          <strong id="averageFast">—</strong>
+        </div>
+
+        <div class="stat-card">
+          <span>Longest Fast</span>
+          <strong id="longestFast">—</strong>
+        </div>
+
+      </div>
+
+
+      <h2>Fasting History</h2>
+
+      <div id="fastingHistory">
+        <p>No fasting sessions yet.</p>
+      </div>
+
+    </section>
+
+
+    <!-- WEIGHT -->
+
+    <section
+      id="weight"
+      class="tab-content"
+    >
+      <h2>Weight</h2>
+
+      <p>
+        Weight tracking will appear here.
+      </p>
+    </section>
+
+
+    <!-- CALORIES -->
+
+    <section
+      id="calories"
+      class="tab-content"
+    >
+      <h2>Calories</h2>
+
+      <p>
+        Food and activity tracking will appear here.
+      </p>
+    </section>
+
+
+    <!-- SUMMARY -->
+
+    <section
+      id="summary"
+      class="tab-content"
+    >
+      <h2>Summary</h2>
+
+      <p>
+        Your overall progress will appear here.
+      </p>
+    </section>
+
+  </main>
+
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+  ></script>
+
+  <script src="app.js"></script>
+
+</body>
+
+</html>
