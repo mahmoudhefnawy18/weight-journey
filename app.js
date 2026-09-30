@@ -2,7 +2,7 @@ const SUPABASE_URL =
   "https://epdinlgqlxfezrjjyhmk.supabase.co/rest/v1/";
 
 const SUPABASE_KEY =
-  "https://epdinlgqlxfezrjjyhmk.supabase.co/rest/v1/";
+  "sb_publishable_xtEL7D8kZQiPiPMuXj-5ww_ibXNJhbr";
 
 
 const db =
