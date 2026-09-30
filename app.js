@@ -237,3 +237,70 @@ startFastBtn.addEventListener(
   "click",
   startFast
 );
+
+// ----------------------------------------
+// LOAD ACTIVE FAST
+// ----------------------------------------
+
+async function loadActiveFast() {
+
+  const { data, error } =
+    await db
+      .from("fasting_sessions")
+      .select("*")
+      .is("ended_at", null)
+      .order(
+        "started_at",
+        {
+          ascending: false
+        }
+      )
+      .limit(1)
+      .maybeSingle();
+
+
+  if (error) {
+
+    console.error(
+      "Unable to load active fast:",
+      error
+    );
+
+    return;
+  }
+
+
+  if (data) {
+
+    activeFast =
+      data;
+
+    showActiveFast();
+
+  } else {
+
+    activeFast =
+      null;
+
+    fastTimer.textContent =
+      "00:00:00";
+
+    fastStatus.textContent =
+      "Not fasting";
+
+    startFastBtn.hidden =
+      false;
+
+    stopFastBtn.hidden =
+      true;
+
+  }
+
+}
+
+
+// ----------------------------------------
+// LOAD APP
+// ----------------------------------------
+
+loadActiveFast();
