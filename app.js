@@ -227,7 +227,104 @@ async function startFast() {
   showActiveFast();
 
 }
+// ----------------------------------------
+// STOP FAST
+// ----------------------------------------
 
+async function stopFast() {
+
+  if (!activeFast) {
+    return;
+  }
+
+
+  const confirmed =
+    confirm(
+      "Are you sure you want to stop your fast?"
+    );
+
+  if (!confirmed) {
+    return;
+  }
+
+
+  stopFastBtn.disabled =
+    true;
+
+  stopFastBtn.textContent =
+    "Stopping...";
+
+
+  const endTime =
+    new Date().toISOString();
+
+
+  const { error } =
+    await db
+      .from("fasting_sessions")
+      .update({
+        ended_at: endTime
+      })
+      .eq(
+        "id",
+        activeFast.id
+      );
+
+
+  if (error) {
+
+    console.error(error);
+
+    alert(
+      "Unable to stop fast."
+    );
+
+    stopFastBtn.disabled =
+      false;
+
+    stopFastBtn.textContent =
+      "Stop Fast";
+
+    return;
+  }
+
+
+  if (timerInterval) {
+
+    clearInterval(
+      timerInterval
+    );
+
+    timerInterval =
+      null;
+  }
+
+
+  activeFast =
+    null;
+
+
+  fastTimer.textContent =
+    "00:00:00";
+
+  fastStatus.textContent =
+    "Not fasting";
+
+
+  stopFastBtn.hidden =
+    true;
+
+  stopFastBtn.disabled =
+    false;
+
+  stopFastBtn.textContent =
+    "Stop Fast";
+
+
+  startFastBtn.hidden =
+    false;
+
+}
 
 // ----------------------------------------
 // BUTTON
@@ -236,6 +333,11 @@ async function startFast() {
 startFastBtn.addEventListener(
   "click",
   startFast
+);
+
+stopFastBtn.addEventListener(
+  "click",
+  stopFast
 );
 
 // ----------------------------------------
