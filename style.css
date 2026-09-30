@@ -1,0 +1,218 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f6f8;
+  color: #1f2937;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+
+/* APP */
+
+.app {
+  width: 100%;
+  max-width: 650px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: white;
+}
+
+
+/* HEADER */
+
+.app-header {
+  text-align: center;
+  padding: 28px 20px 20px;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 30px;
+}
+
+.app-header p {
+  margin: 7px 0 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+
+/* TABS */
+
+.tabs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
+  background: white;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.tab {
+  border: 0;
+  background: transparent;
+  padding: 15px 5px;
+  cursor: pointer;
+  color: #6b7280;
+  font-weight: 600;
+  border-bottom: 3px solid transparent;
+}
+
+.tab.active {
+  color: #111827;
+  border-bottom-color: #111827;
+}
+
+
+/* TAB CONTENT */
+
+.tab-content {
+  display: none;
+  padding: 22px 18px 40px;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+.tab-content h2 {
+  text-align: center;
+  margin: 5px 0 18px;
+  font-size: 20px;
+}
+
+
+/* FASTING CARD */
+
+.fast-card {
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 22px;
+  padding: 34px 20px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.fast-timer {
+  font-size: 46px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.fast-status {
+  margin-top: 8px;
+  margin-bottom: 25px;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+
+/* BUTTON */
+
+.main-button {
+  width: 100%;
+  max-width: 280px;
+  border: none;
+  border-radius: 14px;
+  padding: 15px 20px;
+  background: #111827;
+  color: white;
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.main-button:active {
+  transform: scale(0.98);
+}
+
+.stop-button {
+  background: #dc2626;
+}
+
+
+/* FASTING STATS */
+
+.fast-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 30px;
+}
+
+.stat-card {
+  min-height: 90px;
+  padding: 15px 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: white;
+}
+
+.stat-card span {
+  color: #6b7280;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.stat-card strong {
+  font-size: 17px;
+}
+
+
+/* FASTING HISTORY */
+
+#fastingHistory {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 12px;
+}
+
+#fastingHistory p {
+  text-align: center;
+  color: #9ca3af;
+}
+
+
+/* MOBILE */
+
+@media (max-width: 480px) {
+
+  .app-header h1 {
+    font-size: 26px;
+  }
+
+  .fast-timer {
+    font-size: 38px;
+  }
+
+  .tab {
+    font-size: 13px;
+  }
+
+  .fast-stats {
+    gap: 7px;
+  }
+
+  .stat-card {
+    padding: 12px 5px;
+  }
+
+  .stat-card strong {
+    font-size: 15px;
+  }
+}
