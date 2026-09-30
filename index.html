@@ -136,17 +136,119 @@
 
     <!-- WEIGHT -->
 
-    <section
-      id="weight"
-      class="tab-content"
+<section
+  id="weight"
+  class="tab-content"
+>
+
+  <h2>Weight Progress</h2>
+
+
+  <!-- CURRENT WEIGHT -->
+
+  <div class="weight-main-card">
+
+    <span class="card-label">
+      Current Weight
+    </span>
+
+    <div class="current-weight">
+      <span id="currentWeight">—</span>
+      <small>kg</small>
+    </div>
+
+    <div id="weightChange" class="weight-change">
+      No weight recorded yet
+    </div>
+
+  </div>
+
+
+  <!-- WEIGHT STATS -->
+
+  <div class="weight-stats">
+
+    <div class="stat-card">
+      <span>Starting</span>
+      <strong>
+        <span id="startingWeight">167</span> kg
+      </strong>
+    </div>
+
+    <div class="stat-card">
+      <span>Lost</span>
+      <strong id="weightLost">—</strong>
+    </div>
+
+    <div class="stat-card">
+      <span>Weight Loss</span>
+      <strong id="weightLossPercent">—</strong>
+    </div>
+
+    <div class="stat-card">
+      <span>BMI</span>
+      <strong id="currentBMI">—</strong>
+    </div>
+
+  </div>
+
+
+  <!-- ADD WEIGHT -->
+
+  <div class="entry-card">
+
+    <h3>Record Weight</h3>
+
+    <div class="weight-input-row">
+
+      <input
+        id="weightInput"
+        type="number"
+        inputmode="decimal"
+        step="0.1"
+        min="1"
+        placeholder="Weight"
+      >
+
+      <span>kg</span>
+
+    </div>
+
+    <button
+      id="saveWeightBtn"
+      class="main-button"
     >
-      <h2>Weight</h2>
+      Save Weight
+    </button>
 
-      <p>
-        Weight tracking will appear here.
-      </p>
-    </section>
+    <div
+      id="weightMessage"
+      class="entry-message"
+    ></div>
 
+  </div>
+
+
+  <!-- GRAPH -->
+
+  <div class="weight-chart-card">
+
+    <h3>Weight Loss</h3>
+
+    <canvas id="weightChart"></canvas>
+
+  </div>
+
+
+  <!-- HISTORY -->
+
+  <h2>Weight History</h2>
+
+  <div id="weightHistory">
+    <p>No weight entries yet.</p>
+  </div>
+
+</section>
 
     <!-- CALORIES -->
 
