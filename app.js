@@ -668,3 +668,370 @@ async function loadActiveFast() {
 
 loadActiveFast();
 loadFastingHistory();
+
+// ========================================
+// WEIGHT TRACKING
+// ========================================
+
+const STARTING_WEIGHT = 167;
+const HEIGHT_CM = 180;
+
+const weightInput =
+  document.getElementById("weightInput");
+
+const saveWeightBtn =
+  document.getElementById("saveWeightBtn");
+
+const weightMessage =
+  document.getElementById("weightMessage");
+
+const currentWeight =
+  document.getElementById("currentWeight");
+
+const weightLost =
+  document.getElementById("weightLost");
+
+const weightLossPercent =
+  document.getElementById("weightLossPercent");
+
+const currentBMI =
+  document.getElementById("currentBMI");
+
+const weightChange =
+  document.getElementById("weightChange");
+
+const weightHistory =
+  document.getElementById("weightHistory");
+
+
+// ----------------------------------------
+// SAVE WEIGHT
+// ----------------------------------------
+
+async function saveWeight() {
+
+  const weight =
+    Number(weightInput.value);
+
+
+  if (
+    !weight ||
+    weight <= 0
+  ) {
+
+    weightMessage.textContent =
+      "Please enter a valid weight.";
+
+    return;
+  }
+
+
+  saveWeightBtn.disabled =
+    true;
+
+  saveWeightBtn.textContent =
+    "Saving...";
+
+  weightMessage.textContent =
+    "";
+
+
+  const { error } =
+    await db
+      .from("weight_entries")
+      .insert({
+        weight_kg: weight,
+        recorded_at:
+          new Date().toISOString()
+      });
+
+
+  if (error) {
+
+    console.error(error);
+
+    weightMessage.textContent =
+      "Unable to save weight.";
+
+    saveWeightBtn.disabled =
+      false;
+
+    saveWeightBtn.textContent =
+      "Save Weight";
+
+    return;
+  }
+
+
+  weightInput.value =
+    "";
+
+  weightMessage.textContent =
+    "Weight saved";
+
+
+  saveWeightBtn.disabled =
+    false;
+
+  saveWeightBtn.textContent =
+    "Save Weight";
+
+
+  await loadWeights();
+
+}
+
+
+// ----------------------------------------
+// LOAD WEIGHTS
+// ----------------------------------------
+
+async function loadWeights() {
+
+  const { data, error } =
+    await db
+      .from("weight_entries")
+      .select("*")
+      .order(
+        "recorded_at",
+        {
+          ascending: false
+        }
+      );
+
+
+  if (error) {
+
+    console.error(
+      "Unable to load weights:",
+      error
+    );
+
+    return;
+  }
+
+
+  if (
+    !data ||
+    data.length === 0
+  ) {
+
+    currentWeight.textContent =
+      "—";
+
+    weightLost.textContent =
+      "—";
+
+    weightLossPercent.textContent =
+      "—";
+
+    currentBMI.textContent =
+      "—";
+
+    weightChange.textContent =
+      "No weight recorded yet";
+
+    weightHistory.innerHTML =
+      "<p>No weight entries yet.</p>";
+
+    return;
+  }
+
+
+  // --------------------------------------
+  // CURRENT WEIGHT
+  // --------------------------------------
+
+  const latestWeight =
+    Number(
+      data[0].weight_kg
+    );
+
+
+  currentWeight.textContent =
+    latestWeight.toFixed(1);
+
+
+  // --------------------------------------
+  // TOTAL WEIGHT LOST
+  // --------------------------------------
+
+  const lost =
+    STARTING_WEIGHT -
+    latestWeight;
+
+
+  weightLost.textContent =
+    lost.toFixed(1) +
+    " kg";
+
+
+  // --------------------------------------
+  // PERCENTAGE WEIGHT LOSS
+  // --------------------------------------
+
+  const percentageLost =
+    (
+      lost /
+      STARTING_WEIGHT
+    ) * 100;
+
+
+  weightLossPercent.textContent =
+    percentageLost.toFixed(1) +
+    "%";
+
+
+  // --------------------------------------
+  // BMI
+  // --------------------------------------
+
+  const heightMetres =
+    HEIGHT_CM / 100;
+
+
+  const bmi =
+    latestWeight /
+    (
+      heightMetres *
+      heightMetres
+    );
+
+
+  currentBMI.textContent =
+    bmi.toFixed(1);
+
+
+  // --------------------------------------
+  // CHANGE FROM PREVIOUS ENTRY
+  // --------------------------------------
+
+  if (data.length > 1) {
+
+    const previousWeight =
+      Number(
+        data[1].weight_kg
+      );
+
+
+    const change =
+      latestWeight -
+      previousWeight;
+
+
+    if (change < 0) {
+
+      weightChange.textContent =
+        Math.abs(change).toFixed(1) +
+        " kg down since last entry";
+
+    } else if (change > 0) {
+
+      weightChange.textContent =
+        change.toFixed(1) +
+        " kg up since last entry";
+
+    } else {
+
+      weightChange.textContent =
+        "No change since last entry";
+
+    }
+
+  } else {
+
+    weightChange.textContent =
+      "First weight entry";
+
+  }
+
+
+  // --------------------------------------
+  // WEIGHT HISTORY
+  // --------------------------------------
+
+  weightHistory.innerHTML =
+    "";
+
+
+  data.forEach(entry => {
+
+    const card =
+      document.createElement(
+        "div"
+      );
+
+
+    card.className =
+      "history-card";
+
+
+    const date =
+      new Date(
+        entry.recorded_at
+      );
+
+
+    const dateText =
+      date.toLocaleDateString(
+        "en-GB",
+        {
+          day: "2-digit",
+          month: "short",
+          year: "numeric"
+        }
+      );
+
+
+    const timeText =
+      date.toLocaleTimeString(
+        "en-GB",
+        {
+          hour: "2-digit",
+          minute: "2-digit"
+        }
+      );
+
+
+    card.innerHTML =
+      "<div>" +
+        "<strong>" +
+          dateText +
+        "</strong>" +
+        "<div class='history-time'>" +
+          timeText +
+        "</div>" +
+      "</div>" +
+
+      "<strong>" +
+        Number(
+          entry.weight_kg
+        ).toFixed(1) +
+        " kg" +
+      "</strong>";
+
+
+    weightHistory.appendChild(
+      card
+    );
+
+  });
+
+}
+
+
+// ----------------------------------------
+// WEIGHT BUTTON
+// ----------------------------------------
+
+saveWeightBtn.addEventListener(
+  "click",
+  saveWeight
+);
+
+
+// ----------------------------------------
+// LOAD WEIGHT DATA
+// ----------------------------------------
+
+loadWeights();
