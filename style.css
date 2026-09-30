@@ -378,3 +378,60 @@ select {
 .delete-entry-btn:hover {
   text-decoration: underline;
 }
+
+/* ========================================
+   CALORIE TRACKER
+   ======================================== */
+
+.calorie-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+  text-align: left;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.form-group input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 13px;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  font-size: 16px;
+}
+
+.calorie-input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.calorie-input-row input {
+  flex: 1;
+}
+
+.calorie-input-row span {
+  font-weight: 600;
+  color: #6b7280;
+}
+
+#calorieHistory {
+  border-top: 1px solid #e5e7eb;
+}
+
+#calorieHistory > p {
+  text-align: center;
+  color: #9ca3af;
+}
