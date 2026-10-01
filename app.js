@@ -1260,3 +1260,180 @@ saveWeightBtn.addEventListener(
 // ----------------------------------------
 
 loadWeights();
+
+// ========================================
+// CALORIE TRACKING
+// ========================================
+
+const foodDescription =
+  document.getElementById(
+    "foodDescription"
+  );
+
+const calorieInput =
+  document.getElementById(
+    "calorieInput"
+  );
+
+const foodDate =
+  document.getElementById(
+    "foodDate"
+  );
+
+const saveCaloriesBtn =
+  document.getElementById(
+    "saveCaloriesBtn"
+  );
+
+const calorieMessage =
+  document.getElementById(
+    "calorieMessage"
+  );
+
+const calorieHistory =
+  document.getElementById(
+    "calorieHistory"
+  );
+
+const caloriesToday =
+  document.getElementById(
+    "caloriesToday"
+  );
+
+const calories24h =
+  document.getElementById(
+    "calories24h"
+  );
+
+const calories7Days =
+  document.getElementById(
+    "calories7Days"
+  );
+
+const caloriesDailyAverage =
+  document.getElementById(
+    "caloriesDailyAverage"
+  );
+
+
+// ----------------------------------------
+// DEFAULT FOOD DATE
+// ----------------------------------------
+
+function setDefaultFoodDate() {
+
+  const now =
+    new Date();
+
+  const offset =
+    now.getTimezoneOffset();
+
+  const localTime =
+    new Date(
+      now.getTime() -
+      offset * 60000
+    );
+
+  foodDate.value =
+    localTime
+      .toISOString()
+      .slice(0, 16);
+
+}
+
+setDefaultFoodDate();
+
+// ----------------------------------------
+// SAVE CALORIES
+// ----------------------------------------
+
+async function saveCalories() {
+
+  const calories =
+    Number(
+      calorieInput.value
+    );
+
+  const description =
+    foodDescription.value.trim();
+
+
+  if (
+    !calories ||
+    calories <= 0
+  ) {
+
+    calorieMessage.textContent =
+      "Please enter valid calories.";
+
+    return;
+  }
+
+
+  saveCaloriesBtn.disabled =
+    true;
+
+  saveCaloriesBtn.textContent =
+    "Saving...";
+
+  calorieMessage.textContent =
+    "";
+
+
+  const { error } =
+    await db
+      .from("calorie_entries")
+      .insert({
+        calories: calories,
+        description: description || null,
+        eaten_at:
+          foodDate.value
+            ? new Date(
+                foodDate.value
+              ).toISOString()
+            : new Date().toISOString()
+      });
+
+
+  if (error) {
+
+    console.error(error);
+
+    calorieMessage.textContent =
+      "Unable to save calories.";
+
+    saveCaloriesBtn.disabled =
+      false;
+
+    saveCaloriesBtn.textContent =
+      "Add Calories";
+
+    return;
+  }
+
+
+  calorieInput.value =
+    "";
+
+  foodDescription.value =
+    "";
+
+  setDefaultFoodDate();
+
+
+  calorieMessage.textContent =
+    "Calories saved";
+
+
+  saveCaloriesBtn.disabled =
+    false;
+
+  saveCaloriesBtn.textContent =
+    "Add Calories";
+
+}
+
+saveCaloriesBtn.addEventListener(
+  "click",
+  saveCalories
+);
