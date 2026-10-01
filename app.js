@@ -1996,6 +1996,12 @@ saveActivityBtn.disabled =
 
 }
 
+
+saveActivityBtn.addEventListener(
+  "click",
+  saveActivity
+);
+
 // ----------------------------------------
 // LOAD ACTIVITIES
 // ----------------------------------------
