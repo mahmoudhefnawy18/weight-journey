@@ -1300,6 +1300,11 @@ const caloriesToday =
     "caloriesToday"
   );
 
+const summaryCaloriesToday =
+  document.getElementById(
+    "summaryCaloriesToday"
+  );
+
 const calories24h =
   document.getElementById(
     "calories24h"
@@ -1558,6 +1563,10 @@ async function loadCalories() {
   caloriesToday.textContent =
     Math.round(todayTotal) +
     " kcal";
+
+  summaryCaloriesToday.textContent =
+  Math.round(todayTotal) +
+  " kcal";
 
 
   calories24h.textContent =
