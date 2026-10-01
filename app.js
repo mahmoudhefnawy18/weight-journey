@@ -2278,6 +2278,16 @@ const bmrDisplay =
     "bmrDisplay"
   );
 
+const summaryTDEE =
+  document.getElementById(
+    "summaryTDEE"
+  );
+
+const activityLevel =
+  document.getElementById(
+    "activityLevel"
+  );
+
 
 // ----------------------------------------
 // CALCULATE BMR
@@ -2334,8 +2344,28 @@ async function loadEnergySummary() {
 
   bmrDisplay.textContent =
     bmr;
+  const activityMultiplier =
+  Number(
+    activityLevel.value
+  );
+
+
+const tdee =
+  Math.round(
+    bmr *
+    activityMultiplier
+  );
+
+
+summaryTDEE.textContent =
+  tdee +
+  " kcal";
 
 }
 
+activityLevel.addEventListener(
+  "change",
+  loadEnergySummary
+);
 
 loadEnergySummary();
