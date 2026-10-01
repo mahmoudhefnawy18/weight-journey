@@ -2368,4 +2368,9 @@ activityLevel.addEventListener(
   loadEnergySummary
 );
 
+activityLevel.addEventListener(
+  "change",
+  loadEnergySummary
+);
+
 loadEnergySummary();
