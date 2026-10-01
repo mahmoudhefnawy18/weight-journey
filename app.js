@@ -2255,3 +2255,87 @@ async function deleteActivity(id) {
 }
 
 loadActivities();
+
+// ========================================
+// ENERGY SUMMARY
+// ========================================
+
+const AGE = 38;
+const SEX = "male";
+
+const summaryWeight =
+  document.getElementById(
+    "summaryWeight"
+  );
+
+const summaryBMR =
+  document.getElementById(
+    "summaryBMR"
+  );
+
+const bmrDisplay =
+  document.getElementById(
+    "bmrDisplay"
+  );
+
+
+// ----------------------------------------
+// CALCULATE BMR
+// ----------------------------------------
+
+function calculateBMR(
+  weightKg
+) {
+
+  const bmr =
+    (
+      10 * weightKg
+    ) +
+    (
+      6.25 * HEIGHT_CM
+    ) -
+    (
+      5 * AGE
+    ) +
+    5;
+
+
+  return Math.round(
+    bmr
+  );
+
+}
+
+
+// ----------------------------------------
+// LOAD ENERGY SUMMARY
+// ----------------------------------------
+
+async function loadEnergySummary() {
+
+  const weight =
+    await getLatestWeight();
+
+  const bmr =
+    calculateBMR(
+      weight
+    );
+
+
+  summaryWeight.textContent =
+    weight.toFixed(1) +
+    " kg";
+
+
+  summaryBMR.textContent =
+    bmr +
+    " kcal";
+
+
+  bmrDisplay.textContent =
+    bmr;
+
+}
+
+
+loadEnergySummary();
