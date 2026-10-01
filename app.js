@@ -2326,6 +2326,16 @@ const summaryDeficit30Days =
     "summaryDeficit30Days"
   );
 
+const summary7DaysLabel =
+  document.getElementById(
+    "summary7DaysLabel"
+  );
+
+const summary30DaysLabel =
+  document.getElementById(
+    "summary30DaysLabel"
+  );
+
 const activityLevel =
   document.getElementById(
     "activityLevel"
@@ -2743,6 +2753,35 @@ summaryDeficitToday.textContent =
   summaryDeficit30Days.textContent =
   Math.round(deficit30Days) +
   " kcal";
+  
+const displayDays7 =
+  Math.min(
+    7,
+    trackedDays7
+  );
+
+
+const displayDays30 =
+  Math.min(
+    30,
+    trackedDays30
+  );
+
+
+summary7DaysLabel.textContent =
+  displayDays7 < 7
+    ? "Deficit — " +
+      displayDays7.toFixed(1) +
+      " days tracked"
+    : "Deficit — Last 7 Days";
+
+
+summary30DaysLabel.textContent =
+  displayDays30 < 30
+    ? "Deficit — " +
+      displayDays30.toFixed(1) +
+      " days tracked"
+    : "Deficit — Last 30 Days";
 }
 
 updateTodayDeficit();
