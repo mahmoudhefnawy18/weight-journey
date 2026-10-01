@@ -1422,11 +1422,14 @@ async function saveCalories() {
 
 
   calorieMessage.textContent =
-    "Calories saved";
+  "Calories saved";
 
 
-  saveCaloriesBtn.disabled =
-    false;
+await loadCalories();
+
+
+saveCaloriesBtn.disabled =
+  false;
 
   saveCaloriesBtn.textContent =
     "Add Calories";
@@ -1437,3 +1440,142 @@ saveCaloriesBtn.addEventListener(
   "click",
   saveCalories
 );
+
+// ----------------------------------------
+// LOAD CALORIES
+// ----------------------------------------
+
+async function loadCalories() {
+
+  const { data, error } =
+    await db
+      .from("calorie_entries")
+      .select("*")
+      .order(
+        "eaten_at",
+        {
+          ascending: false
+        }
+      );
+
+
+  if (error) {
+
+    console.error(
+      "Unable to load calories:",
+      error
+    );
+
+    return;
+  }
+
+
+  const entries =
+    data || [];
+
+
+  const now =
+    new Date();
+
+  const startToday =
+    new Date();
+
+  startToday.setHours(
+    0,
+    0,
+    0,
+    0
+  );
+
+
+  const twentyFourHoursAgo =
+    new Date(
+      now.getTime() -
+      24 * 60 * 60 * 1000
+    );
+
+
+  const sevenDaysAgo =
+    new Date(
+      now.getTime() -
+      7 * 24 * 60 * 60 * 1000
+    );
+
+
+  let todayTotal = 0;
+  let total24h = 0;
+  let total7Days = 0;
+
+
+  entries.forEach(entry => {
+
+    const eatenAt =
+      new Date(
+        entry.eaten_at
+      );
+
+    const calories =
+      Number(
+        entry.calories
+      );
+
+
+    if (
+      eatenAt >= startToday &&
+      eatenAt <= now
+    ) {
+
+      todayTotal +=
+        calories;
+
+    }
+
+
+    if (
+      eatenAt >= twentyFourHoursAgo &&
+      eatenAt <= now
+    ) {
+
+      total24h +=
+        calories;
+
+    }
+
+
+    if (
+      eatenAt >= sevenDaysAgo &&
+      eatenAt <= now
+    ) {
+
+      total7Days +=
+        calories;
+
+    }
+
+  });
+
+
+  caloriesToday.textContent =
+    Math.round(todayTotal) +
+    " kcal";
+
+
+  calories24h.textContent =
+    Math.round(total24h) +
+    " kcal";
+
+
+  calories7Days.textContent =
+    Math.round(total7Days) +
+    " kcal";
+
+
+  caloriesDailyAverage.textContent =
+    Math.round(
+      total7Days / 7
+    ) +
+    " kcal";
+
+}
+
+loadCalories();
