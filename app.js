@@ -2316,6 +2316,16 @@ const summaryDeficitToday =
     "summaryDeficitToday"
   );
 
+const summaryDeficit7Days =
+  document.getElementById(
+    "summaryDeficit7Days"
+  );
+
+const summaryDeficit30Days =
+  document.getElementById(
+    "summaryDeficit30Days"
+  );
+
 const activityLevel =
   document.getElementById(
     "activityLevel"
@@ -2420,6 +2430,7 @@ activityLevel.addEventListener(
     );
 
     loadEnergySummary();
+    updateTodayDeficit();
 
   }
 );
@@ -2455,6 +2466,19 @@ async function updateTodayDeficit() {
     0, 0, 0, 0
   );
 
+  const sevenDaysAgo =
+  new Date(
+    now.getTime() -
+    (7 * 24 * 60 * 60 * 1000)
+  );
+
+
+const thirtyDaysAgo =
+  new Date(
+    now.getTime() -
+    (30 * 24 * 60 * 60 * 1000)
+  );
+
   const dayFraction =
     (now - startToday) /
     (24 * 60 * 60 * 1000);
@@ -2471,18 +2495,111 @@ const { data: foodData } =
     .select("calories,eaten_at")
     .gte(
       "eaten_at",
-      startToday.toISOString()
+   thirtyDaysAgo.toISOString()
     );
 
 
 const caloriesEatenToday =
-  (foodData || []).reduce(
-    (total, entry) =>
-      total +
-      Number(entry.calories),
-    0
-  );
+  (foodData || [])
+    .filter(
+      entry =>
+        new Date(
+          entry.eaten_at
+        ) >= startToday
+    )
+    .reduce(
+      (total, entry) =>
+        total +
+        Number(entry.calories),
+      0
+    );
+  const caloriesEaten7Days =
+  (foodData || [])
+    .filter(
+      entry =>
+        new Date(
+          entry.eaten_at
+        ) >= sevenDaysAgo
+    )
+    .reduce(
+      (total, entry) =>
+        total +
+        Number(entry.calories),
+      0
+    );
 
+
+const caloriesEaten30Days =
+  (foodData || [])
+    .reduce(
+      (total, entry) =>
+        total +
+        Number(entry.calories),
+      0
+    );
+
+  const foodDates =
+  (foodData || [])
+    .map(
+      entry =>
+        new Date(entry.eaten_at)
+    );
+
+
+const firstFoodDate =
+  foodDates.length
+    ? new Date(
+        Math.min(
+          ...foodDates.map(
+            date => date.getTime()
+          )
+        )
+      )
+    : null;
+
+  const trackingStart7Days =
+  firstFoodDate &&
+  firstFoodDate > sevenDaysAgo
+    ? firstFoodDate
+    : sevenDaysAgo;
+
+
+const trackingStart30Days =
+  firstFoodDate &&
+  firstFoodDate > thirtyDaysAgo
+    ? firstFoodDate
+    : thirtyDaysAgo;
+
+
+const trackedDays7 =
+  firstFoodDate
+    ? (
+        now -
+        trackingStart7Days
+      ) /
+      (
+        24 *
+        60 *
+        60 *
+        1000
+      )
+    : 0;
+
+
+const trackedDays30 =
+  firstFoodDate
+    ? (
+        now -
+        trackingStart30Days
+      ) /
+      (
+        24 *
+        60 *
+        60 *
+        1000
+      )
+    : 0;
+  
   // Logged activity today
 
 const { data: activityData } =
@@ -2493,11 +2610,17 @@ const { data: activityData } =
     )
     .gte(
       "performed_at",
-      startToday.toISOString()
+thirtyDaysAgo.toISOString()
     );
 
 
-let extraActivityBurn =
+let extraActivityToday =
+  0;
+
+let extraActivity7Days =
+  0;
+
+let extraActivity30Days =
   0;
 
 
@@ -2534,8 +2657,42 @@ let extraActivityBurn =
       );
 
 
-    extraActivityBurn +=
-      extraBurn;
+const activityTime =
+  new Date(
+    activity.performed_at
+  );
+
+
+if (
+  activityTime >= startToday
+) {
+
+  extraActivityToday +=
+    extraBurn;
+
+}
+
+
+if (
+  firstFoodDate &&
+  activityTime >= trackingStart7Days
+) {
+
+  extraActivity7Days +=
+    extraBurn;
+
+}
+
+
+if (
+  firstFoodDate &&
+  activityTime >= trackingStart30Days
+) {
+
+  extraActivity30Days +=
+    extraBurn;
+
+}
 
   }
 );
@@ -2543,7 +2700,7 @@ let extraActivityBurn =
 
 const totalBurnSoFar =
   baselineBurnSoFar +
-  extraActivityBurn;
+  extraActivityToday;
 
 
 // Estimated deficit so far today
@@ -2552,9 +2709,39 @@ const deficitToday =
   totalBurnSoFar -
   caloriesEatenToday;
 
+  // Estimated deficit for last 7 days
+
+const totalBurn7Days =
+  (dailyExpenditure * trackedDays7) +
+  extraActivity7Days;
+
+
+const deficit7Days =
+  totalBurn7Days -
+  caloriesEaten7Days;
+
+  // Estimated deficit for last 30 days
+
+const totalBurn30Days =
+  (dailyExpenditure * trackedDays30) +
+  extraActivity30Days;
+
+
+const deficit30Days =
+  totalBurn30Days -
+  caloriesEaten30Days;
+
 
 summaryDeficitToday.textContent =
   Math.round(deficitToday) +
+  " kcal";
+
+  summaryDeficit7Days.textContent =
+  Math.round(deficit7Days) +
+  " kcal";
+
+  summaryDeficit30Days.textContent =
+  Math.round(deficit30Days) +
   " kcal";
 }
 
