@@ -820,6 +820,7 @@ async function saveWeight() {
 // ----------------------------------------
 
 let weightChartInstance = null;
+let deficitChartInstance = null;
 
 
 function drawWeightChart(entries) {
@@ -2741,6 +2742,181 @@ const deficit30Days =
   totalBurn30Days -
   caloriesEaten30Days;
 
+// Daily deficit chart data
+
+const deficitLabels =
+  [];
+
+const deficitValues =
+  [];
+
+if (firstFoodDate) {
+
+  const chartStartDate =
+    new Date(
+      trackingStart30Days
+    );
+
+  chartStartDate.setHours(
+    0, 0, 0, 0
+  );
+
+
+  const chartEndDate =
+    new Date();
+
+  chartEndDate.setHours(
+    0, 0, 0, 0
+  );
+
+  for (
+  let day =
+    new Date(chartStartDate);
+
+  day <= chartEndDate;
+
+  day.setDate(
+    day.getDate() + 1
+  )
+) {
+
+  const dayStart =
+    new Date(day);
+
+  const dayEnd =
+    new Date(day);
+
+  dayEnd.setDate(
+    dayEnd.getDate() + 1
+  );
+
+    const foodForDay =
+  (foodData || [])
+    .filter(
+      entry => {
+
+        const entryDate =
+          new Date(
+            entry.eaten_at
+          );
+
+        return (
+          entryDate >= dayStart &&
+          entryDate < dayEnd
+        );
+
+      }
+    )
+    .reduce(
+      (total, entry) =>
+        total +
+        Number(entry.calories),
+      0
+    );
+
+  let extraActivityForDay =
+  0;
+
+
+(activityData || [])
+  .filter(
+    activity => {
+
+      const activityTime =
+        new Date(
+          activity.performed_at
+        );
+
+      return (
+        activityTime >= dayStart &&
+        activityTime < dayEnd
+      );
+
+    }
+  )
+  .forEach(
+    activity => {
+
+      const grossBurn =
+        Number(
+          activity.calories_burned
+        );
+
+      const minutes =
+        Number(
+          activity.duration_minutes
+        );
+
+
+      const normalBurn =
+        (
+          dailyExpenditure /
+          1440
+        ) *
+        minutes;
+
+
+      extraActivityForDay +=
+        Math.max(
+          0,
+          grossBurn -
+          normalBurn
+        );
+
+    }
+  );
+
+    let baselineForDay =
+  dailyExpenditure;
+
+
+// Today is only a partial day,
+// so count expenditure up to the current time
+
+if (
+  dayStart.getTime() ===
+  chartEndDate.getTime()
+) {
+
+  baselineForDay =
+    baselineBurnSoFar;
+
+}
+
+
+const deficitForDay =
+  baselineForDay +
+  extraActivityForDay -
+  foodForDay;
+
+
+deficitValues.push(
+  Math.round(
+    deficitForDay
+  )
+);
+
+  deficitLabels.push(
+    dayStart.toLocaleDateString(
+      "en-GB",
+      {
+        day: "2-digit",
+        month: "short"
+      }
+    )
+    );
+
+}
+
+
+// Draw the deficit graph
+
+drawDeficitChart(
+  deficitLabels,
+  deficitValues
+);
+
+}
 
 summaryDeficitToday.textContent =
   Math.round(deficitToday) +
@@ -2785,3 +2961,61 @@ summary30DaysLabel.textContent =
 }
 
 updateTodayDeficit();
+
+function drawDeficitChart(
+  labels,
+  values
+) {
+
+  const canvas =
+    document.getElementById(
+      "deficitChart"
+    );
+
+
+  if (!canvas) {
+    return;
+  }
+
+
+  if (deficitChartInstance) {
+
+    deficitChartInstance.destroy();
+
+  }
+
+
+  deficitChartInstance =
+    new Chart(
+      canvas,
+      {
+        type: "line",
+
+        data: {
+          labels: labels,
+
+          datasets: [
+            {
+              label:
+                "Daily Deficit (kcal)",
+
+              data: values,
+
+              tension: 0.3
+            }
+          ]
+        },
+
+        options: {
+          responsive: true,
+
+          scales: {
+            y: {
+              beginAtZero: false
+            }
+          }
+        }
+      }
+    );
+
+}
