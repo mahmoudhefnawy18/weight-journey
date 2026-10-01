@@ -1970,16 +1970,288 @@ async function saveActivity() {
   setDefaultActivityDate();
 
 
-  activityMessage.textContent =
-    "Activity saved — estimated " +
-    caloriesBurned +
-    " kcal burned";
+ activityMessage.textContent =
+  "Activity saved — estimated " +
+  caloriesBurned +
+  " kcal burned";
 
 
-  saveActivityBtn.disabled =
-    false;
+await loadActivities();
+
+
+saveActivityBtn.disabled =
+  false;
 
   saveActivityBtn.textContent =
     "Add Activity";
 
 }
+
+// ----------------------------------------
+// LOAD ACTIVITIES
+// ----------------------------------------
+
+async function loadActivities() {
+
+  const { data, error } =
+    await db
+      .from("activity_entries")
+      .select("*")
+      .order(
+        "performed_at",
+        {
+          ascending: false
+        }
+      );
+
+
+  if (error) {
+
+    console.error(
+      "Unable to load activities:",
+      error
+    );
+
+    return;
+  }
+
+
+  const entries =
+    data || [];
+
+
+  const now =
+    new Date();
+
+  const startToday =
+    new Date();
+
+  startToday.setHours(
+    0,
+    0,
+    0,
+    0
+  );
+
+
+  const sevenDaysAgo =
+    new Date(
+      now.getTime() -
+      7 * 24 * 60 * 60 * 1000
+    );
+
+
+  let burnedToday = 0;
+  let burned7Days = 0;
+
+
+  entries.forEach(entry => {
+
+    const activityTime =
+      new Date(
+        entry.performed_at
+      );
+
+    const calories =
+      Number(
+        entry.calories_burned
+      ) || 0;
+
+
+    if (
+      activityTime >= startToday &&
+      activityTime <= now
+    ) {
+
+      burnedToday +=
+        calories;
+
+    }
+
+
+    if (
+      activityTime >= sevenDaysAgo &&
+      activityTime <= now
+    ) {
+
+      burned7Days +=
+        calories;
+
+    }
+
+  });
+
+
+  activityToday.textContent =
+    Math.round(burnedToday) +
+    " kcal";
+
+
+  activity7Days.textContent =
+    Math.round(burned7Days) +
+    " kcal";
+
+    // --------------------------------------
+  // ACTIVITY HISTORY
+  // --------------------------------------
+
+  activityHistory.innerHTML =
+    "";
+
+
+  if (entries.length === 0) {
+
+    activityHistory.innerHTML =
+      "<p>No activities yet.</p>";
+
+    return;
+  }
+
+
+  const activityNames = {
+    walking: "Walking",
+    brisk_walking: "Brisk Walking",
+    cycling: "Cycling",
+    swimming: "Swimming",
+    gym: "Gym / General Exercise"
+  };
+
+
+  entries.forEach(entry => {
+
+    const card =
+      document.createElement(
+        "div"
+      );
+
+    card.className =
+      "history-card";
+
+
+    const date =
+      new Date(
+        entry.performed_at
+      );
+
+
+    const dateText =
+      date.toLocaleDateString(
+        "en-GB",
+        {
+          day: "2-digit",
+          month: "short",
+          year: "numeric"
+        }
+      );
+
+
+    const timeText =
+      date.toLocaleTimeString(
+        "en-GB",
+        {
+          hour: "2-digit",
+          minute: "2-digit"
+        }
+      );
+
+
+    const name =
+      activityNames[
+        entry.activity_type
+      ] ||
+      entry.activity_type;
+
+
+    card.innerHTML =
+      "<div>" +
+
+        "<strong>" +
+          name +
+        "</strong>" +
+
+        "<div class='history-time'>" +
+          Math.round(
+            Number(
+              entry.duration_minutes
+            )
+          ) +
+          " min · " +
+          dateText +
+          " · " +
+          timeText +
+        "</div>" +
+
+      "</div>" +
+
+            "<div class='history-right'>" +
+
+        "<strong>" +
+          Math.round(
+            Number(
+              entry.calories_burned
+            )
+          ) +
+          " kcal" +
+        "</strong>" +
+
+        "<button " +
+          "class='delete-entry-btn' " +
+          "onclick='deleteActivity(" +
+          entry.id +
+          ")'>" +
+          "Delete" +
+        "</button>" +
+
+      "</div>";
+
+    activityHistory.appendChild(
+      card
+    );
+
+  });
+  
+}
+
+// ----------------------------------------
+// DELETE ACTIVITY
+// ----------------------------------------
+
+async function deleteActivity(id) {
+
+  const confirmed =
+    confirm(
+      "Delete this activity?"
+    );
+
+  if (!confirmed) {
+    return;
+  }
+
+
+  const { error } =
+    await db
+      .from("activity_entries")
+      .delete()
+      .eq(
+        "id",
+        id
+      );
+
+
+  if (error) {
+
+    console.error(error);
+
+    alert(
+      "Unable to delete activity."
+    );
+
+    return;
+  }
+
+
+  await loadActivities();
+
+}
+
+loadActivities();
