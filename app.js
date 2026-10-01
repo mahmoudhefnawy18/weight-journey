@@ -1719,3 +1719,267 @@ async function deleteCalories(id) {
 }
 
 loadCalories();
+
+// ========================================
+// ACTIVITY TRACKING
+// ========================================
+
+const activityType =
+  document.getElementById(
+    "activityType"
+  );
+
+const activityDuration =
+  document.getElementById(
+    "activityDuration"
+  );
+
+const activityDate =
+  document.getElementById(
+    "activityDate"
+  );
+
+const saveActivityBtn =
+  document.getElementById(
+    "saveActivityBtn"
+  );
+
+const activityMessage =
+  document.getElementById(
+    "activityMessage"
+  );
+
+const activityHistory =
+  document.getElementById(
+    "activityHistory"
+  );
+
+const activityToday =
+  document.getElementById(
+    "activityToday"
+  );
+
+const activity7Days =
+  document.getElementById(
+    "activity7Days"
+  );
+
+
+// ----------------------------------------
+// DEFAULT ACTIVITY DATE
+// ----------------------------------------
+
+function setDefaultActivityDate() {
+
+  const now =
+    new Date();
+
+  const offset =
+    now.getTimezoneOffset();
+
+  const localTime =
+    new Date(
+      now.getTime() -
+      offset * 60000
+    );
+
+  activityDate.value =
+    localTime
+      .toISOString()
+      .slice(0, 16);
+
+}
+
+setDefaultActivityDate();
+
+// ----------------------------------------
+// ACTIVITY CALORIE ESTIMATE
+// ----------------------------------------
+
+const activityMETs = {
+  walking: 3.5,
+  brisk_walking: 4.8,
+  cycling: 6.8,
+  swimming: 6.0,
+  gym: 5.0
+};
+
+
+async function getLatestWeight() {
+
+  const { data, error } =
+    await db
+      .from("weight_entries")
+      .select("weight_kg")
+      .order(
+        "recorded_at",
+        {
+          ascending: false
+        }
+      )
+      .limit(1)
+      .maybeSingle();
+
+
+  if (error) {
+
+    console.error(
+      "Unable to get latest weight:",
+      error
+    );
+
+    return STARTING_WEIGHT;
+  }
+
+
+  if (!data) {
+    return STARTING_WEIGHT;
+  }
+
+
+  return Number(
+    data.weight_kg
+  );
+
+}
+
+
+function calculateActivityCalories(
+  met,
+  weightKg,
+  minutes
+) {
+
+  const calories =
+    (
+      met *
+      3.5 *
+      weightKg /
+      200
+    ) *
+    minutes;
+
+
+  return Math.round(
+    calories
+  );
+
+}
+
+// ----------------------------------------
+// SAVE ACTIVITY
+// ----------------------------------------
+
+async function saveActivity() {
+
+  const type =
+    activityType.value;
+
+  const minutes =
+    Number(
+      activityDuration.value
+    );
+
+
+  if (!type) {
+
+    activityMessage.textContent =
+      "Please select an activity.";
+
+    return;
+  }
+
+
+  if (
+    !minutes ||
+    minutes <= 0
+  ) {
+
+    activityMessage.textContent =
+      "Please enter a valid duration.";
+
+    return;
+  }
+
+
+  saveActivityBtn.disabled =
+    true;
+
+  saveActivityBtn.textContent =
+    "Saving...";
+
+  activityMessage.textContent =
+    "";
+
+
+  const weight =
+    await getLatestWeight();
+
+
+  const met =
+    activityMETs[type];
+
+
+  const caloriesBurned =
+    calculateActivityCalories(
+      met,
+      weight,
+      minutes
+    );
+
+
+  const { error } =
+    await db
+      .from("activity_entries")
+      .insert({
+        activity_type: type,
+        duration_minutes: minutes,
+        calories_burned: caloriesBurned,
+        performed_at:
+          activityDate.value
+            ? new Date(
+                activityDate.value
+              ).toISOString()
+            : new Date().toISOString()
+      });
+
+
+  if (error) {
+
+    console.error(error);
+
+    activityMessage.textContent =
+      "Unable to save activity.";
+
+    saveActivityBtn.disabled =
+      false;
+
+    saveActivityBtn.textContent =
+      "Add Activity";
+
+    return;
+  }
+
+
+  activityType.value =
+    "";
+
+  activityDuration.value =
+    "";
+
+  setDefaultActivityDate();
+
+
+  activityMessage.textContent =
+    "Activity saved — estimated " +
+    caloriesBurned +
+    " kcal burned";
+
+
+  saveActivityBtn.disabled =
+    false;
+
+  saveActivityBtn.textContent =
+    "Add Activity";
+
+}
