@@ -1431,6 +1431,7 @@ async function saveCalories() {
 
 
 await loadCalories();
+await updateTodayDeficit();
 
 
 saveCaloriesBtn.disabled =
@@ -1724,6 +1725,7 @@ async function deleteCalories(id) {
 
 
   await loadCalories();
+  await updateTodayDeficit();
 
 }
 
@@ -1766,6 +1768,11 @@ const activityHistory =
 const activityToday =
   document.getElementById(
     "activityToday"
+  );
+
+const summaryActivityToday =
+  document.getElementById(
+    "summaryActivityToday"
   );
 
 const activity7Days =
@@ -1986,6 +1993,7 @@ async function saveActivity() {
 
 
 await loadActivities();
+await updateTodayDeficit();
 
 
 saveActivityBtn.disabled =
@@ -2100,6 +2108,10 @@ async function loadActivities() {
   activityToday.textContent =
     Math.round(burnedToday) +
     " kcal";
+
+  summaryActivityToday.textContent =
+  Math.round(burnedToday) +
+  " kcal";
 
 
   activity7Days.textContent =
@@ -2266,6 +2278,7 @@ async function deleteActivity(id) {
 
 
   await loadActivities();
+  await updateTodayDeficit();
 
 }
 
@@ -2296,6 +2309,11 @@ const bmrDisplay =
 const summaryTDEE =
   document.getElementById(
     "summaryTDEE"
+  );
+
+const summaryDeficitToday =
+  document.getElementById(
+    "summaryDeficitToday"
   );
 
 const activityLevel =
@@ -2408,3 +2426,136 @@ activityLevel.addEventListener(
 
 
 loadEnergySummary();
+
+async function updateTodayDeficit() {
+
+  const weight =
+    await getLatestWeight();
+
+  const bmr =
+    calculateBMR(weight);
+
+  const multiplier =
+    Number(
+      activityLevel.value
+    );
+
+  const dailyExpenditure =
+    bmr * multiplier;
+
+
+  // Burn accumulated so far today
+  const now =
+    new Date();
+
+  const startToday =
+    new Date();
+
+  startToday.setHours(
+    0, 0, 0, 0
+  );
+
+  const dayFraction =
+    (now - startToday) /
+    (24 * 60 * 60 * 1000);
+
+  const baselineBurnSoFar =
+    dailyExpenditure *
+    dayFraction;
+
+  // Calories eaten today
+
+const { data: foodData } =
+  await db
+    .from("calorie_entries")
+    .select("calories,eaten_at")
+    .gte(
+      "eaten_at",
+      startToday.toISOString()
+    );
+
+
+const caloriesEatenToday =
+  (foodData || []).reduce(
+    (total, entry) =>
+      total +
+      Number(entry.calories),
+    0
+  );
+
+  // Logged activity today
+
+const { data: activityData } =
+  await db
+    .from("activity_entries")
+    .select(
+      "calories_burned,duration_minutes,performed_at"
+    )
+    .gte(
+      "performed_at",
+      startToday.toISOString()
+    );
+
+
+let extraActivityBurn =
+  0;
+
+
+(activityData || []).forEach(
+  activity => {
+
+    const grossBurn =
+      Number(
+        activity.calories_burned
+      );
+
+    const minutes =
+      Number(
+        activity.duration_minutes
+      );
+
+
+    // Normal expenditure already included
+    // during these minutes
+
+    const normalBurnDuringActivity =
+      (
+        dailyExpenditure /
+        1440
+      ) *
+      minutes;
+
+
+    const extraBurn =
+      Math.max(
+        0,
+        grossBurn -
+        normalBurnDuringActivity
+      );
+
+
+    extraActivityBurn +=
+      extraBurn;
+
+  }
+);
+// Total estimated burn so far today
+
+const totalBurnSoFar =
+  baselineBurnSoFar +
+  extraActivityBurn;
+
+
+// Estimated deficit so far today
+
+const deficitToday =
+  totalBurnSoFar -
+  caloriesEatenToday;
+
+
+summaryDeficitToday.textContent =
+  Math.round(deficitToday) +
+  " kcal";
+}
+
+updateTodayDeficit();
