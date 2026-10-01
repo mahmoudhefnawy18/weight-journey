@@ -1569,12 +1569,152 @@ async function loadCalories() {
     Math.round(total7Days) +
     " kcal";
 
-
   caloriesDailyAverage.textContent =
     Math.round(
       total7Days / 7
     ) +
     " kcal";
+
+    // --------------------------------------
+  // FOOD HISTORY
+  // --------------------------------------
+
+  calorieHistory.innerHTML =
+    "";
+
+
+  if (entries.length === 0) {
+
+    calorieHistory.innerHTML =
+      "<p>No calorie entries yet.</p>";
+
+    return;
+  }
+
+
+  entries.forEach(entry => {
+
+    const card =
+      document.createElement(
+        "div"
+      );
+
+    card.className =
+      "history-card";
+
+
+    const date =
+      new Date(
+        entry.eaten_at
+      );
+
+
+    const dateText =
+      date.toLocaleDateString(
+        "en-GB",
+        {
+          day: "2-digit",
+          month: "short",
+          year: "numeric"
+        }
+      );
+
+
+    const timeText =
+      date.toLocaleTimeString(
+        "en-GB",
+        {
+          hour: "2-digit",
+          minute: "2-digit"
+        }
+      );
+
+
+    const description =
+      entry.description ||
+      "Food / Drink";
+
+
+    card.innerHTML =
+      "<div>" +
+
+        "<strong>" +
+          description +
+        "</strong>" +
+
+        "<div class='history-time'>" +
+          dateText +
+          " · " +
+          timeText +
+        "</div>" +
+
+      "</div>" +
+
+          "<div class='history-right'>" +
+
+        "<strong>" +
+          Math.round(
+            Number(entry.calories)
+          ) +
+          " kcal" +
+        "</strong>" +
+
+        "<button " +
+          "class='delete-entry-btn' " +
+          "onclick='deleteCalories(" +
+          entry.id +
+          ")'>" +
+          "Delete" +
+        "</button>" +
+
+      "</div>";
+
+    calorieHistory.appendChild(
+      card
+    );
+
+  });
+}
+
+// ----------------------------------------
+// DELETE CALORIE ENTRY
+// ----------------------------------------
+
+async function deleteCalories(id) {
+
+  const confirmed =
+    confirm(
+      "Delete this calorie entry?"
+    );
+
+  if (!confirmed) {
+    return;
+  }
+
+
+  const { error } =
+    await db
+      .from("calorie_entries")
+      .delete()
+      .eq(
+        "id",
+        id
+      );
+
+
+  if (error) {
+
+    console.error(error);
+
+    alert(
+      "Unable to delete calorie entry."
+    );
+
+    return;
+  }
+
+
+  await loadCalories();
 
 }
 
