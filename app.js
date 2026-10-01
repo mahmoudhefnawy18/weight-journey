@@ -2363,14 +2363,33 @@ summaryTDEE.textContent =
 
 }
 
-activityLevel.addEventListener(
-  "change",
-  loadEnergySummary
-);
+const savedActivityLevel =
+  localStorage.getItem(
+    "weightJourneyActivityLevel"
+  );
+
+
+if (savedActivityLevel) {
+
+  activityLevel.value =
+    savedActivityLevel;
+
+}
+
 
 activityLevel.addEventListener(
   "change",
-  loadEnergySummary
+  () => {
+
+    localStorage.setItem(
+      "weightJourneyActivityLevel",
+      activityLevel.value
+    );
+
+    loadEnergySummary();
+
+  }
 );
+
 
 loadEnergySummary();
