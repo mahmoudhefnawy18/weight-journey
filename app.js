@@ -1113,11 +1113,12 @@ weightLost.textContent =
 
 
   const savedGoal =
-    Number(
-      localStorage.getItem(
-        "weightJourneyGoalWeight"
-      )
-    );
+  Number(
+    goalWeight.value ||
+    localStorage.getItem(
+      "weightJourneyGoalWeight"
+    )
+  );
 
 
   if (
@@ -1128,6 +1129,35 @@ weightLost.textContent =
     const toGoal =
       latestWeight -
       savedGoal;
+
+    const totalGoalLoss =
+      STARTING_WEIGHT -
+      savedGoal;
+
+    const progressMade =
+      STARTING_WEIGHT -
+      latestWeight;
+
+    const goalProgress =
+      totalGoalLoss > 0
+        ? Math.min(
+            100,
+            Math.max(
+              0,
+              (
+                progressMade /
+                totalGoalLoss
+              ) * 100
+            )
+          )
+        : 0;
+
+    goalProgressBar.value =
+      goalProgress;
+
+    goalProgressText.textContent =
+      goalProgress.toFixed(1) +
+      "% complete";
 
     if (toGoal > 0) {
 
@@ -1144,8 +1174,16 @@ weightLost.textContent =
 
   } else {
 
+} else {
+
     weightToGoal.textContent =
       "—";
+
+    goalProgressBar.value =
+      0;
+
+    goalProgressText.textContent =
+      "Set a goal weight to see progress.";
 
   }
 
