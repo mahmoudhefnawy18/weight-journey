@@ -118,13 +118,11 @@ function formatFastDuration(startTime) {
   );
 
 }
-
-
 // ----------------------------------------
 // UPDATE TIMER
 // ----------------------------------------
 
-function function updateFastTimer() {
+function updateFastTimer() {
 
   if (!activeFast) {
     return;
@@ -141,19 +139,7 @@ function function updateFastTimer() {
   summaryCurrentFast.textContent =
     duration;
 
-}() {
-
-  if (!activeFast) {
-    return;
-  }
-
-  fastTimer.textContent =
-    formatFastDuration(
-      activeFast.started_at
-    );
-
 }
-
 
 // ----------------------------------------
 // SHOW ACTIVE FAST
