@@ -4079,3 +4079,22 @@ loginBtn.addEventListener(
 
 
 checkLogin();
+
+const logoutBtn =
+  document.getElementById("logoutBtn");
+
+logoutBtn.addEventListener(
+  "click",
+  async () => {
+
+    await db.auth.signOut();
+
+    loginEmail.value = "";
+    loginPassword.value = "";
+    loginMessage.textContent = "";
+
+    loginScreen.style.display =
+      "block";
+
+  }
+);
