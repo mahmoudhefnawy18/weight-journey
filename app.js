@@ -753,7 +753,14 @@ const currentWeight =
   document.getElementById("currentWeight");
 
 const weightLost =
-  document.getElementById("weightLost");
+  document.getElementById(
+    "weightLost"
+  );
+
+const weightToGoal =
+  document.getElementById(
+    "weightToGoal"
+  );
 
 const weightLossPercent =
   document.getElementById("weightLossPercent");
@@ -1090,9 +1097,47 @@ async function loadWeights() {
     latestWeight;
 
 
-  weightLost.textContent =
+weightLost.textContent =
     lost.toFixed(1) +
     " kg";
+
+
+  const savedGoal =
+    Number(
+      localStorage.getItem(
+        "weightJourneyGoalWeight"
+      )
+    );
+
+
+  if (
+    savedGoal &&
+    savedGoal > 0
+  ) {
+
+    const toGoal =
+      latestWeight -
+      savedGoal;
+
+    if (toGoal > 0) {
+
+      weightToGoal.textContent =
+        toGoal.toFixed(1) +
+        " kg";
+
+    } else {
+
+      weightToGoal.textContent =
+        "Goal reached";
+
+    }
+
+  } else {
+
+    weightToGoal.textContent =
+      "—";
+
+  }
 
 
   // --------------------------------------
@@ -2935,6 +2980,8 @@ if (savedGoalWeight) {
   goalWeight.value =
     savedGoalWeight;
 
+  loadWeights();
+
 }
 
 saveGoalWeightBtn.addEventListener(
@@ -2964,6 +3011,8 @@ saveGoalWeightBtn.addEventListener(
 
     goalWeightMessage.textContent =
       "Goal weight saved.";
+
+    loadWeights();
 
   }
 );
