@@ -2835,6 +2835,21 @@ const activityLevel =
     "activityLevel"
   );
 
+const goalWeight =
+  document.getElementById(
+    "goalWeight"
+  );
+
+const saveGoalWeightBtn =
+  document.getElementById(
+    "saveGoalWeightBtn"
+  );
+
+const goalWeightMessage =
+  document.getElementById(
+    "goalWeightMessage"
+  );
+
 
 // ----------------------------------------
 // CALCULATE BMR
@@ -2909,6 +2924,49 @@ summaryTDEE.textContent =
   " kcal";
 
 }
+
+const savedGoalWeight =
+  localStorage.getItem(
+    "weightJourneyGoalWeight"
+  );
+
+if (savedGoalWeight) {
+
+  goalWeight.value =
+    savedGoalWeight;
+
+}
+
+saveGoalWeightBtn.addEventListener(
+  "click",
+  () => {
+
+    const value =
+      Number(
+        goalWeight.value
+      );
+
+    if (
+      !value ||
+      value <= 0
+    ) {
+
+      goalWeightMessage.textContent =
+        "Please enter a valid goal weight.";
+
+      return;
+    }
+
+    localStorage.setItem(
+      "weightJourneyGoalWeight",
+      value
+    );
+
+    goalWeightMessage.textContent =
+      "Goal weight saved.";
+
+  }
+);
 
 const savedActivityLevel =
   localStorage.getItem(
