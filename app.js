@@ -1386,6 +1386,11 @@ const caloriesDailyAverage =
     "caloriesDailyAverage"
   );
 
+const calories7DayAverage =
+  document.getElementById(
+    "calories7DayAverage"
+  );
+
 
 // ----------------------------------------
 // DEFAULT FOOD DATE
@@ -1644,6 +1649,13 @@ async function loadCalories() {
   calories7Days.textContent =
     Math.round(total7Days) +
     " kcal";
+
+  calories7DayAverage.textContent =
+  Math.round(
+    total7Days / 7
+  ) +
+  " kcal";
+  
 
   const trackedCalorieDays =
   new Set(
