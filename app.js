@@ -331,6 +331,7 @@ async function stopFast() {
 // Refresh fasting statistics and history
 
 await loadFastingHistory();
+  await loadFastingSummary();
 
 }
 // ----------------------------------------
