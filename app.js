@@ -4018,6 +4018,9 @@ function drawActivityChart(
 
 }
 
+const mainApp =
+  document.querySelector(".app");
+
 const loginScreen =
   document.getElementById("loginScreen");
 
@@ -4041,11 +4044,13 @@ async function checkLogin() {
   } =
     await db.auth.getSession();
 
-  if (session) {
-    loginScreen.style.display = "none";
-  } else {
-    loginScreen.style.display = "block";
-  }
+if (session) {
+  loginScreen.style.display = "none";
+  mainApp.style.display = "";
+} else {
+  loginScreen.style.display = "block";
+  mainApp.style.display = "none";
+}
 
 }
 
@@ -4071,8 +4076,11 @@ loginBtn.addEventListener(
 
     loginMessage.textContent = "";
 
-    loginScreen.style.display =
-      "none";
+  loginScreen.style.display =
+  "none";
+
+mainApp.style.display =
+  "";
 
   }
 );
@@ -4095,6 +4103,9 @@ logoutBtn.addEventListener(
 
     loginScreen.style.display =
       "block";
+
+    mainApp.style.display =
+  "none";
 
   }
 );
