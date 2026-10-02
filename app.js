@@ -68,6 +68,11 @@ const startFastBtn =
 const stopFastBtn =
   document.getElementById("stopFastBtn");
 
+const summaryCurrentFast =
+  document.getElementById(
+    "summaryCurrentFast"
+  );
+
 
 let activeFast = null;
 
@@ -2520,11 +2525,6 @@ const summaryAverageFast =
 const summaryLongestFast =
   document.getElementById(
     "summaryLongestFast"
-  );
-
-const summaryCurrentFast =
-  document.getElementById(
-    "summaryCurrentFast"
   );
 
 async function loadFastingSummary() {
