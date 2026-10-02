@@ -4017,3 +4017,65 @@ function drawActivityChart(
     );
 
 }
+
+const loginScreen =
+  document.getElementById("loginScreen");
+
+const loginEmail =
+  document.getElementById("loginEmail");
+
+const loginPassword =
+  document.getElementById("loginPassword");
+
+const loginBtn =
+  document.getElementById("loginBtn");
+
+const loginMessage =
+  document.getElementById("loginMessage");
+
+
+async function checkLogin() {
+
+  const {
+    data: { session }
+  } =
+    await db.auth.getSession();
+
+  if (session) {
+    loginScreen.style.display = "none";
+  } else {
+    loginScreen.style.display = "block";
+  }
+
+}
+
+
+loginBtn.addEventListener(
+  "click",
+  async () => {
+
+    loginMessage.textContent =
+      "Logging in...";
+
+    const { error } =
+      await db.auth.signInWithPassword({
+        email: loginEmail.value.trim(),
+        password: loginPassword.value
+      });
+
+    if (error) {
+      loginMessage.textContent =
+        "Incorrect email or password.";
+      return;
+    }
+
+    loginMessage.textContent = "";
+
+    loginScreen.style.display =
+      "none";
+
+  }
+);
+
+
+checkLogin();
