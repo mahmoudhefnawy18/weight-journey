@@ -76,9 +76,6 @@ const summaryCurrentFast =
 
 let activeFast = null;
 
-summaryCurrentFast.textContent =
-  "Not fasting";
-
 let timerInterval = null;
 
 
