@@ -823,6 +823,7 @@ async function saveWeight() {
 
 let weightChartInstance = null;
 let deficitChartInstance = null;
+let calorieChartInstance = null;
 
 
 function drawWeightChart(entries) {
@@ -1584,11 +1585,149 @@ async function loadCalories() {
     Math.round(total7Days) +
     " kcal";
 
-  caloriesDailyAverage.textContent =
-    Math.round(
-      total7Days / 7
-    ) +
-    " kcal";
+  const trackedCalorieDays =
+  new Set(
+    entries
+      .filter(
+        entry =>
+          new Date(
+            entry.eaten_at
+          ) >= sevenDaysAgo
+      )
+      .map(
+        entry =>
+          new Date(
+            entry.eaten_at
+          ).toLocaleDateString(
+            "en-CA"
+          )
+      )
+  ).size;
+
+
+ caloriesDailyAverage.textContent =
+  trackedCalorieDays > 0
+    ? Math.round(
+        total7Days /
+        trackedCalorieDays
+      ) +
+      " kcal"
+    : "0 kcal";
+
+  // ----------------------------------------
+// DAILY CALORIE CHART
+// ----------------------------------------
+
+const calorieChartLabels =
+  [];
+
+const calorieChartValues =
+  [];
+
+  const calorieChartStart =
+  new Date();
+
+calorieChartStart.setDate(
+  calorieChartStart.getDate() - 6
+);
+
+calorieChartStart.setHours(
+  0, 0, 0, 0
+);
+
+
+for (
+  let i = 0;
+  i < 7;
+  i++
+) {
+
+  const dayStart =
+    new Date(
+      calorieChartStart
+    );
+
+  dayStart.setDate(
+    dayStart.getDate() + i
+  );
+
+
+  const dayEnd =
+    new Date(dayStart);
+
+  dayEnd.setDate(
+    dayEnd.getDate() + 1
+  );
+
+  const caloriesForDay =
+  (data || [])
+    .filter(
+      entry => {
+
+        const entryDate =
+          new Date(
+            entry.eaten_at
+          );
+
+        return (
+          entryDate >= dayStart &&
+          entryDate < dayEnd
+        );
+
+      }
+    )
+    .reduce(
+      (total, entry) =>
+        total +
+        Number(entry.calories),
+      0
+    );
+
+
+calorieChartLabels.push(
+  dayStart.toLocaleDateString(
+    "en-GB",
+    {
+      day: "2-digit",
+      month: "short"
+    }
+  )
+);
+
+
+calorieChartValues.push(
+  Math.round(
+    caloriesForDay
+  )
+);
+
+}
+
+const currentWeight =
+  await getLatestWeight();
+
+const currentBMR =
+  calculateBMR(
+    currentWeight
+  );
+
+const currentActivityMultiplier =
+  Number(
+    activityLevel.value
+  );
+
+const calorieChartExpenditure =
+  Math.round(
+    currentBMR *
+    currentActivityMultiplier
+  );
+  
+  drawCalorieChart(
+  calorieChartLabels,
+  calorieChartValues
+  calorieChartExpenditure
+);
+  
 
     // --------------------------------------
   // FOOD HISTORY
@@ -2062,12 +2201,16 @@ async function loadActivities() {
   );
 
 
-  const sevenDaysAgo =
-    new Date(
-      now.getTime() -
-      7 * 24 * 60 * 60 * 1000
-    );
+ const sevenDaysAgo =
+  new Date();
 
+sevenDaysAgo.setDate(
+  sevenDaysAgo.getDate() - 6
+);
+
+sevenDaysAgo.setHours(
+  0, 0, 0, 0
+);
 
   let burnedToday = 0;
   let burned7Days = 0;
@@ -2451,6 +2594,7 @@ activityLevel.addEventListener(
 
     loadEnergySummary();
     updateTodayDeficit();
+    loadCalories();
 
   }
 );
@@ -3041,6 +3185,85 @@ function drawDeficitChart(
           scales: {
             y: {
               beginAtZero: false
+              }
+            }
+          }
+        }
+      );
+  
+  }
+
+// ========================================
+// CALORIE INTAKE CHART
+// ========================================
+
+
+function drawCalorieChart(
+  labels,
+  values,
+  dailyExpenditure
+) {
+
+  const canvas =
+    document.getElementById(
+      "calorieChart"
+    );
+
+
+  if (!canvas) {
+    return;
+  }
+
+
+  if (calorieChartInstance) {
+
+    calorieChartInstance.destroy();
+
+  }
+
+
+  calorieChartInstance =
+    new Chart(
+      canvas,
+      {
+        type: "bar",
+
+        data: {
+          labels: labels,
+
+          datasets: [
+  {
+    label:
+      "Calories Eaten",
+
+    data: values
+  },
+
+  {
+    label:
+      "Daily Expenditure",
+
+    data:
+      labels.map(
+        () =>
+          dailyExpenditure
+      ),
+
+    type: "line",
+
+    tension: 0,
+
+    pointRadius: 0
+  }
+]
+        },
+
+        options: {
+          responsive: true,
+
+          scales: {
+            y: {
+              beginAtZero: true
             }
           }
         }
