@@ -2729,6 +2729,12 @@ loadActivities();
 const AGE = 38;
 const SEX = "male";
 
+const PROFILE_HEIGHT_CM =
+  HEIGHT_CM;
+
+const PROFILE_STARTING_WEIGHT =
+  STARTING_WEIGHT;
+
 const summaryWeight =
   document.getElementById(
     "summaryWeight"
