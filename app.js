@@ -1415,8 +1415,6 @@ saveWeightBtn.addEventListener(
 // LOAD WEIGHT DATA
 // ----------------------------------------
 
-loadWeights();
-
 // ========================================
 // CALORIE TRACKING
 // ========================================
@@ -2034,8 +2032,6 @@ async function deleteCalories(id) {
   await updateTodayDeficit();
 
 }
-
-loadCalories();
 
 // ========================================
 // ACTIVITY TRACKING
@@ -2718,8 +2714,6 @@ async function deleteActivity(id) {
 
 }
 
-loadActivities();
-
 // ========================================
 // ENERGY SUMMARY
 // ========================================
@@ -2878,8 +2872,6 @@ async function loadFastingSummary() {
     );
 }
 
-loadFastingSummary();
-
 const bmrDisplay =
   document.getElementById(
     "bmrDisplay"
@@ -3030,8 +3022,6 @@ if (savedGoalWeight) {
   goalWeight.value =
     savedGoalWeight;
 
-  loadWeights();
-
 }
 
 saveGoalWeightBtn.addEventListener(
@@ -3062,8 +3052,6 @@ saveGoalWeightBtn.addEventListener(
     goalWeightMessage.textContent =
       "Goal weight saved.";
 
-    loadWeights();
-
   }
 );
 
@@ -3090,15 +3078,8 @@ activityLevel.addEventListener(
       activityLevel.value
     );
 
-    loadEnergySummary();
-    updateTodayDeficit();
-    loadCalories();
-
   }
 );
-
-
-loadEnergySummary();
 
 async function updateTodayDeficit() {
 
