@@ -4055,11 +4055,20 @@ loginBtn.addEventListener(
 
     loginMessage.textContent = "";
 
-  loginScreen.style.display =
+loginScreen.style.display =
   "none";
 
 mainApp.style.display =
   "";
+
+loadActiveFast();
+loadFastingHistory();
+loadWeights();
+loadCalories();
+loadActivities();
+loadFastingSummary();
+loadEnergySummary();
+updateTodayDeficit();
 
   }
 );
