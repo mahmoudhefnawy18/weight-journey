@@ -725,10 +725,8 @@ async function deleteFast(id) {
 
 // ----------------------------------------
 // LOAD APP
+// Data loads after successful login
 // ----------------------------------------
-
-loadActiveFast();
-loadFastingHistory();
 
 // ========================================
 // WEIGHT TRACKING
