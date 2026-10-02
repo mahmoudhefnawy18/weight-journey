@@ -71,6 +71,9 @@ const stopFastBtn =
 
 let activeFast = null;
 
+summaryCurrentFast.textContent =
+  "Not fasting";
+
 let timerInterval = null;
 
 
@@ -121,7 +124,24 @@ function formatFastDuration(startTime) {
 // UPDATE TIMER
 // ----------------------------------------
 
-function updateFastTimer() {
+function function updateFastTimer() {
+
+  if (!activeFast) {
+    return;
+  }
+
+  const duration =
+    formatFastDuration(
+      activeFast.started_at
+    );
+
+  fastTimer.textContent =
+    duration;
+
+  summaryCurrentFast.textContent =
+    duration;
+
+}() {
 
   if (!activeFast) {
     return;
@@ -393,6 +413,9 @@ async function loadActiveFast() {
     fastStatus.textContent =
       "Not fasting";
 
+    summaryCurrentFast.textContent =
+  "Not fasting";
+
     startFastBtn.hidden =
       false;
 
@@ -649,11 +672,23 @@ async function loadFastingHistory() {
         "</div>" +
       "</div>" +
 
-      "<strong>" +
-        formatMinutes(
-          session.durationMinutes
-        ) +
-      "</strong>";
+        "<div class='history-right'>" +
+
+        "<strong>" +
+          formatMinutes(
+            session.durationMinutes
+          ) +
+        "</strong>" +
+
+        "<button " +
+          "class='delete-entry-btn' " +
+          "onclick='deleteFast(" +
+          session.id +
+          ")'>" +
+          "Delete" +
+        "</button>" +
+
+      "</div>";
 
 
     historyArea.appendChild(
@@ -2464,6 +2499,12 @@ const summaryLongestFast =
   document.getElementById(
     "summaryLongestFast"
   );
+
+const summaryCurrentFast =
+  document.getElementById(
+    "summaryCurrentFast"
+  );
+
 async function loadFastingSummary() {
 
   const { data, error } =
