@@ -2463,6 +2463,127 @@ const summaryLongestFast =
   document.getElementById(
     "summaryLongestFast"
   );
+async function loadFastingSummary() {
+
+  const { data, error } =
+    await db
+      .from("fasting_sessions")
+      .select(
+        "started_at, ended_at"
+      )
+      .not(
+        "ended_at",
+        "is",
+        null
+      )
+      .order(
+        "ended_at",
+        {
+          ascending: false
+        }
+      );
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  const sessions =
+    data || [];
+
+  if (
+    sessions.length === 0
+  ) {
+
+    summaryLastFast.textContent =
+      "—";
+
+    summaryAverageFast.textContent =
+      "—";
+
+    summaryLongestFast.textContent =
+      "—";
+
+    return;
+  }
+
+    const durations =
+    sessions.map(
+      session => {
+
+        const start =
+          new Date(
+            session.started_at
+          );
+
+        const end =
+          new Date(
+            session.ended_at
+          );
+
+        return (
+          end - start
+        );
+
+      }
+    );
+    const lastFast =
+    durations[0];
+
+  const averageFast =
+    durations.reduce(
+      (total, duration) =>
+        total + duration,
+      0
+    ) /
+    durations.length;
+
+  const longestFast =
+    Math.max(
+      ...durations
+    );
+    function formatSummaryDuration(
+    milliseconds
+  ) {
+
+    const totalMinutes =
+      Math.round(
+        milliseconds /
+        (1000 * 60)
+      );
+
+    const hours =
+      Math.floor(
+        totalMinutes / 60
+      );
+
+    const minutes =
+      totalMinutes % 60;
+
+    return (
+      hours +
+      "h " +
+      minutes +
+      "m"
+    );
+  }
+    summaryLastFast.textContent =
+    formatSummaryDuration(
+      lastFast
+    );
+
+  summaryAverageFast.textContent =
+    formatSummaryDuration(
+      averageFast
+    );
+
+  summaryLongestFast.textContent =
+    formatSummaryDuration(
+      longestFast
+    );
+}
+
+loadFastingSummary();
 
 const bmrDisplay =
   document.getElementById(
