@@ -884,6 +884,7 @@ async function saveWeight() {
 let weightChartInstance = null;
 let deficitChartInstance = null;
 let calorieChartInstance = null;
+let activityChartInstance = null;
 
 
 function drawWeightChart(entries) {
@@ -2258,6 +2259,87 @@ async function loadActivities() {
   const entries =
     data || [];
 
+  const activityChartLabels = [];
+const activityChartValues = [];
+
+const activityChartStart =
+  new Date();
+
+activityChartStart.setDate(
+  activityChartStart.getDate() - 6
+);
+
+activityChartStart.setHours(
+  0, 0, 0, 0
+);
+
+for (let i = 0; i < 7; i++) {
+
+  const dayStart =
+    new Date(
+      activityChartStart
+    );
+
+  dayStart.setDate(
+    dayStart.getDate() + i
+  );
+
+  const dayEnd =
+    new Date(
+      dayStart
+    );
+
+  dayEnd.setDate(
+    dayEnd.getDate() + 1
+  );
+
+  const caloriesForDay =
+    entries
+      .filter(entry => {
+
+        const entryDate =
+          new Date(
+            entry.performed_at
+          );
+
+        return (
+          entryDate >= dayStart &&
+          entryDate < dayEnd
+        );
+
+      })
+      .reduce(
+        (total, entry) =>
+          total +
+          Number(
+            entry.calories_burned
+          ),
+        0
+      );
+
+  activityChartLabels.push(
+    dayStart.toLocaleDateString(
+      "en-GB",
+      {
+        day: "2-digit",
+        month: "short"
+      }
+    )
+  );
+
+  activityChartValues.push(
+    Math.round(
+      caloriesForDay
+    )
+  );
+
+}
+
+  drawActivityChart(
+  activityChartLabels,
+  activityChartValues
+);
+
 
   const now =
     new Date();
@@ -3465,6 +3547,57 @@ function drawCalorieChart(
     pointRadius: 0
   }
 ]
+        },
+
+        options: {
+          responsive: true,
+
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      }
+    );
+
+}
+
+function drawActivityChart(
+  labels,
+  values
+) {
+
+  const canvas =
+    document.getElementById(
+      "activityChart"
+    );
+
+  if (!canvas) {
+    return;
+  }
+
+  if (activityChartInstance) {
+    activityChartInstance.destroy();
+  }
+
+  activityChartInstance =
+    new Chart(
+      canvas,
+      {
+        type: "bar",
+
+        data: {
+          labels: labels,
+
+          datasets: [
+            {
+              label:
+                "Activity Calories",
+
+              data: values
+            }
+          ]
         },
 
         options: {
