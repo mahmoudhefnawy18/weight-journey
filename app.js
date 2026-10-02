@@ -762,6 +762,16 @@ const weightToGoal =
     "weightToGoal"
   );
 
+const goalProgressText =
+  document.getElementById(
+    "goalProgressText"
+  );
+
+const goalProgressBar =
+  document.getElementById(
+    "goalProgressBar"
+  );
+
 const weightLossPercent =
   document.getElementById("weightLossPercent");
 
