@@ -2815,6 +2815,11 @@ const estimatedWeightEquivalent =
     "estimatedWeightEquivalent"
   );
 
+const weightEquivalentLabel =
+  document.getElementById(
+    "weightEquivalentLabel"
+  );
+
 const summary7DaysLabel =
   document.getElementById(
     "summary7DaysLabel"
@@ -3036,13 +3041,16 @@ const thirtyDaysAgo =
 
 const { data: foodData } =
   await db
-    .from("calorie_entries")
-    .select("calories,eaten_at")
-    .gte(
-      "eaten_at",
-   thirtyDaysAgo.toISOString()
-    );
-
+   .from("calorie_entries")
+.select("calories,eaten_at")
+.gte(
+  "eaten_at",
+  thirtyDaysAgo.toISOString()
+)
+.lte(
+  "eaten_at",
+  now.toISOString()
+);
 
 const caloriesEatenToday =
   (foodData || [])
@@ -3149,14 +3157,18 @@ const trackedDays30 =
 
 const { data: activityData } =
   await db
-    .from("activity_entries")
-    .select(
-      "calories_burned,duration_minutes,performed_at"
-    )
-    .gte(
-      "performed_at",
-thirtyDaysAgo.toISOString()
-    );
+ .from("activity_entries")
+.select(
+  "calories_burned,duration_minutes,performed_at"
+)
+.gte(
+  "performed_at",
+  thirtyDaysAgo.toISOString()
+)
+.lte(
+  "performed_at",
+  now.toISOString()
+);
 
 
 let extraActivityToday =
@@ -3632,12 +3644,13 @@ const displayDays7 =
     trackedDays7
   );
 
-
 const displayDays30 =
-  Math.min(
-    30,
-    trackedDays30
-  );
+  Math.min(30, trackedDays30);
+
+weightEquivalentLabel.textContent =
+  "Weight Equivalent — " +
+  displayDays30.toFixed(1) +
+  " days tracked";
 
 
 summary7DaysLabel.textContent =
