@@ -699,6 +699,42 @@ async function loadFastingHistory() {
 
 }
 
+async function deleteFast(id) {
+
+  const confirmed =
+    confirm(
+      "Delete this fasting session?"
+    );
+
+  if (!confirmed) {
+    return;
+  }
+
+  const { error } =
+    await db
+      .from("fasting_sessions")
+      .delete()
+      .eq(
+        "id",
+        id
+      );
+
+  if (error) {
+
+    console.error(error);
+
+    alert(
+      "Unable to delete fasting session."
+    );
+
+    return;
+  }
+
+  await loadFastingHistory();
+  await loadFastingSummary();
+
+}
+
 // ----------------------------------------
 // LOAD APP
 // ----------------------------------------
