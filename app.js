@@ -1172,8 +1172,6 @@ weightLost.textContent =
 
     }
 
-  } else {
-
 } else {
 
     weightToGoal.textContent =
