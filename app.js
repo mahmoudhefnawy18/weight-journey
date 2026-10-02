@@ -1722,9 +1722,9 @@ const calorieChartExpenditure =
     currentActivityMultiplier
   );
   
-  drawCalorieChart(
+ drawCalorieChart(
   calorieChartLabels,
-  calorieChartValues
+  calorieChartValues,
   calorieChartExpenditure
 );
   
