@@ -2099,6 +2099,51 @@ function calculateActivityCalories(
 
 }
 
+async function getWeightAtDate(
+  targetDate
+) {
+
+  const { data, error } =
+    await db
+      .from("weight_entries")
+      .select(
+        "weight_kg, recorded_at"
+      )
+      .lte(
+        "recorded_at",
+        targetDate.toISOString()
+      )
+      .order(
+        "recorded_at",
+        {
+          ascending: false
+        }
+      )
+      .limit(1)
+      .maybeSingle();
+
+
+  if (error) {
+
+    console.error(
+      "Unable to get historical weight:",
+      error
+    );
+
+    return STARTING_WEIGHT;
+  }
+
+
+  if (!data) {
+    return STARTING_WEIGHT;
+  }
+
+
+  return Number(
+    data.weight_kg
+  );
+
+}
 // ----------------------------------------
 // SAVE ACTIVITY
 // ----------------------------------------
@@ -2895,6 +2940,51 @@ loadEnergySummary();
 
 async function updateTodayDeficit() {
 
+  const { data: weightHistory } =
+  await db
+    .from("weight_entries")
+    .select(
+      "weight_kg, recorded_at"
+    )
+    .order(
+      "recorded_at",
+      {
+        ascending: true
+      }
+    );
+
+    function getHistoricalWeight(
+    targetDate
+  ) {
+
+    let historicalWeight =
+      STARTING_WEIGHT;
+
+    (weightHistory || [])
+      .forEach(entry => {
+
+        const entryDate =
+          new Date(
+            entry.recorded_at
+          );
+
+        if (
+          entryDate <= targetDate
+        ) {
+
+          historicalWeight =
+            Number(
+              entry.weight_kg
+            );
+
+        }
+
+      });
+
+    return historicalWeight;
+
+  }
+  
   const weight =
     await getLatestWeight();
 
@@ -3166,8 +3256,137 @@ const deficitToday =
 
   // Estimated deficit for last 7 days
 
+let historicalBaseline7Days = 0;
+let historicalBaseline30Days = 0;
+
+if (firstFoodDate) {
+
+  const baselineStart =
+    new Date(
+      trackingStart30Days
+    );
+
+  const baselineEnd =
+    new Date();
+
+  baselineStart.setHours(
+    0, 0, 0, 0
+  );
+
+  baselineEnd.setHours(
+    0, 0, 0, 0
+  );
+
+for (
+  let day =
+    new Date(baselineStart);
+
+  day <= baselineEnd;
+
+  day.setDate(
+    day.getDate() + 1
+  )
+) {
+
+  const dayStart =
+    new Date(day);
+
+  const weightForDay =
+    getHistoricalWeight(
+      dayStart
+    );
+
+  const bmrForDay =
+    calculateBMR(
+      weightForDay
+    );
+
+  const expenditureForDay =
+    bmrForDay *
+    multiplier;
+
+  const dayEnd =
+  new Date(
+    dayStart
+  );
+
+dayEnd.setDate(
+  dayEnd.getDate() + 1
+);
+
+const effectiveStart =
+  dayStart <
+  trackingStart30Days
+    ? trackingStart30Days
+    : dayStart;
+
+const effectiveEnd =
+  dayEnd > now
+    ? now
+    : dayEnd;
+
+const fractionOfDay =
+  Math.max(
+    0,
+    (
+      effectiveEnd -
+      effectiveStart
+    ) /
+    (
+      24 *
+      60 *
+      60 *
+      1000
+    )
+  );
+
+historicalBaseline30Days +=
+  expenditureForDay *
+  fractionOfDay;
+
+const sevenDayEffectiveStart =
+  dayStart <
+  trackingStart7Days
+    ? trackingStart7Days
+    : dayStart;
+
+const sevenDayEffectiveEnd =
+  dayEnd > now
+    ? now
+    : dayEnd;
+
+const sevenDayFraction =
+  Math.max(
+    0,
+    (
+      sevenDayEffectiveEnd -
+      sevenDayEffectiveStart
+    ) /
+    (
+      24 *
+      60 *
+      60 *
+      1000
+    )
+  );
+
+if (
+  dayEnd >
+  trackingStart7Days
+) {
+
+  historicalBaseline7Days +=
+    expenditureForDay *
+    sevenDayFraction;
+
+}
+  
+}
+
+}
+  
 const totalBurn7Days =
-  (dailyExpenditure * trackedDays7) +
+  historicalBaseline7Days +
   extraActivity7Days;
 
 
@@ -3178,9 +3397,8 @@ const deficit7Days =
   // Estimated deficit for last 30 days
 
 const totalBurn30Days =
-  (dailyExpenditure * trackedDays30) +
+  historicalBaseline30Days +
   extraActivity30Days;
-
 
 const deficit30Days =
   totalBurn30Days -
@@ -3234,6 +3452,20 @@ if (firstFoodDate) {
   const dayEnd =
     new Date(day);
 
+      const weightForDay =
+    getHistoricalWeight(
+      dayStart
+    );
+
+  const bmrForDay =
+    calculateBMR(
+      weightForDay
+    );
+
+  const expenditureForDay =
+    bmrForDay *
+    multiplier;
+    
   dayEnd.setDate(
     dayEnd.getDate() + 1
   );
@@ -3327,10 +3559,10 @@ if (
 ) {
 
   baselineForDay =
-    baselineBurnSoFar;
+    expenditureForDay *
+    dayFraction;
 
 }
-
 
 const deficitForDay =
   baselineForDay +
