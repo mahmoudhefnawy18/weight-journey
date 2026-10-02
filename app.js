@@ -811,6 +811,8 @@ async function saveWeight() {
 
 
   await loadWeights();
+  await loadEnergySummary();
+  await updateTodayDeficit();
 
 }
 
@@ -1242,7 +1244,9 @@ async function deleteWeight(id) {
   }
 
 
-  await loadWeights();
+await loadWeights();
+await loadEnergySummary();
+await updateTodayDeficit();
 
 }
 
@@ -2327,6 +2331,11 @@ const summaryDeficit30Days =
     "summaryDeficit30Days"
   );
 
+const estimatedWeightEquivalent =
+  document.getElementById(
+    "estimatedWeightEquivalent"
+  );
+
 const summary7DaysLabel =
   document.getElementById(
     "summary7DaysLabel"
@@ -2742,6 +2751,10 @@ const deficit30Days =
   totalBurn30Days -
   caloriesEaten30Days;
 
+const weightEquivalentKg =
+  deficit30Days /
+  7700;
+
 // Daily deficit chart data
 
 const deficitLabels =
@@ -2929,6 +2942,22 @@ summaryDeficitToday.textContent =
   summaryDeficit30Days.textContent =
   Math.round(deficit30Days) +
   " kcal";
+
+ if (weightEquivalentKg >= 0) {
+
+  estimatedWeightEquivalent.textContent =
+    weightEquivalentKg.toFixed(2) +
+    " kg loss";
+
+} else {
+
+  estimatedWeightEquivalent.textContent =
+    Math.abs(
+      weightEquivalentKg
+    ).toFixed(2) +
+    " kg gain";
+
+}
   
 const displayDays7 =
   Math.min(
