@@ -2449,6 +2449,21 @@ const summaryBMR =
     "summaryBMR"
   );
 
+const summaryLastFast =
+  document.getElementById(
+    "summaryLastFast"
+  );
+
+const summaryAverageFast =
+  document.getElementById(
+    "summaryAverageFast"
+  );
+
+const summaryLongestFast =
+  document.getElementById(
+    "summaryLongestFast"
+  );
+
 const bmrDisplay =
   document.getElementById(
     "bmrDisplay"
