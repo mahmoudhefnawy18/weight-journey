@@ -2982,8 +2982,6 @@ summaryTDEE.textContent =
 
 }
 
-);
-
 const ACTIVITY_MULTIPLIER = 1.3;
 
 async function updateTodayDeficit() {
