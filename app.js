@@ -734,6 +734,7 @@ async function deleteFast(id) {
 
 const STARTING_WEIGHT = 167;
 const HEIGHT_CM = 180;
+const GOAL_WEIGHT = 80;
 
 const weightInput =
   document.getElementById("weightInput");
@@ -1110,13 +1111,7 @@ weightLost.textContent =
     " kg";
 
 
-  const savedGoal =
-  Number(
-    goalWeight.value ||
-    localStorage.getItem(
-      "weightJourneyGoalWeight"
-    )
-  );
+ const savedGoal = GOAL_WEIGHT;
 
 
   if (
@@ -1872,9 +1867,7 @@ const currentBMR =
   );
 
 const currentActivityMultiplier =
-  Number(
-    activityLevel.value
-  );
+ ACTIVITY_MULTIPLIER;
 
 const calorieChartExpenditure =
   Math.round(
@@ -2917,27 +2910,6 @@ const summary30DaysLabel =
     "summary30DaysLabel"
   );
 
-const activityLevel =
-  document.getElementById(
-    "activityLevel"
-  );
-
-const goalWeight =
-  document.getElementById(
-    "goalWeight"
-  );
-
-const saveGoalWeightBtn =
-  document.getElementById(
-    "saveGoalWeightBtn"
-  );
-
-const goalWeightMessage =
-  document.getElementById(
-    "goalWeightMessage"
-  );
-
-
 // ----------------------------------------
 // CALCULATE BMR
 // ----------------------------------------
@@ -2994,9 +2966,7 @@ async function loadEnergySummary() {
   bmrDisplay.textContent =
     bmr;
   const activityMultiplier =
-  Number(
-    activityLevel.value
-  );
+ACTIVITY_MULTIPLIER;
 
 
 const tdee =
@@ -3012,74 +2982,9 @@ summaryTDEE.textContent =
 
 }
 
-const savedGoalWeight =
-  localStorage.getItem(
-    "weightJourneyGoalWeight"
-  );
-
-if (savedGoalWeight) {
-
-  goalWeight.value =
-    savedGoalWeight;
-
-}
-
-saveGoalWeightBtn.addEventListener(
-  "click",
-  () => {
-
-    const value =
-      Number(
-        goalWeight.value
-      );
-
-    if (
-      !value ||
-      value <= 0
-    ) {
-
-      goalWeightMessage.textContent =
-        "Please enter a valid goal weight.";
-
-      return;
-    }
-
-    localStorage.setItem(
-      "weightJourneyGoalWeight",
-      value
-    );
-
-    goalWeightMessage.textContent =
-      "Goal weight saved.";
-
-  }
 );
 
-const savedActivityLevel =
-  localStorage.getItem(
-    "weightJourneyActivityLevel"
-  );
-
-
-if (savedActivityLevel) {
-
-  activityLevel.value =
-    savedActivityLevel;
-
-}
-
-
-activityLevel.addEventListener(
-  "change",
-  () => {
-
-    localStorage.setItem(
-      "weightJourneyActivityLevel",
-      activityLevel.value
-    );
-
-  }
-);
+const ACTIVITY_MULTIPLIER = 1.3;
 
 async function updateTodayDeficit() {
 
@@ -3135,9 +3040,7 @@ async function updateTodayDeficit() {
     calculateBMR(weight);
 
   const multiplier =
-    Number(
-      activityLevel.value
-    );
+   ACTIVITY_MULTIPLIER;
 
   const dailyExpenditure =
     bmr * multiplier;
