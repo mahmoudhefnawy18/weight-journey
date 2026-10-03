@@ -3669,8 +3669,6 @@ summary30DaysLabel.textContent =
     : "Deficit — Last 30 Days";
 }
 
-updateTodayDeficit();
-
 function drawDeficitChart(
   labels,
   values
