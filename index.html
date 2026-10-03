@@ -19,54 +19,69 @@
 
 <body>
 
-<div id="loginScreen">
-  <div class="entry-card">
-    <h2>Weight Journey Login</h2>
+  <!-- LOGIN -->
 
-    <input
-      id="loginEmail"
-      type="email"
-      placeholder="Email"
-      autocomplete="email"
-    >
+  <div id="loginScreen">
 
-    <input
-      id="loginPassword"
-      type="password"
-      placeholder="Password"
-      autocomplete="current-password"
-    >
+    <div class="entry-card">
 
-    <button
-      id="loginBtn"
-      class="main-button"
-    >
-      Login
-    </button>
+      <h2>Weight Journey Login</h2>
 
-    <div
-      id="loginMessage"
-      class="entry-message"
-    ></div>
+      <input
+        id="loginEmail"
+        type="email"
+        placeholder="Email"
+        autocomplete="email"
+      >
+
+      <input
+        id="loginPassword"
+        type="password"
+        placeholder="Password"
+        autocomplete="current-password"
+      >
+
+      <button
+        id="loginBtn"
+        class="main-button"
+      >
+        Login
+      </button>
+
+      <div
+        id="loginMessage"
+        class="entry-message"
+      ></div>
+
+    </div>
+
   </div>
-</div>
+
+
+  <!-- APP -->
 
   <main class="app">
 
+    <!-- HEADER -->
+
     <header class="app-header">
+
       <h1>Weight Journey</h1>
+
       <button
-  id="logoutBtn"
-  class="main-button"
-  style="width:auto; padding:8px 16px;"
->
-  Logout
-</button>
+        id="logoutBtn"
+        class="main-button"
+        style="width:auto; padding:8px 16px;"
+      >
+        Logout
+      </button>
+
       <p>My progress, one day at a time</p>
+
     </header>
 
 
-    <!-- Navigation -->
+    <!-- NAVIGATION -->
 
     <nav class="tabs">
 
@@ -101,7 +116,9 @@
     </nav>
 
 
-    <!-- FASTING -->
+    <!-- =====================================
+         FASTING
+    ===================================== -->
 
     <section
       id="fasting"
@@ -173,1237 +190,699 @@
     </section>
 
 
-    <!-- WEIGHT -->
-
-<section
-  id="weight"
-  class="tab-content"
->
-
-  <h2>Weight Progress</h2>
-
-
-  <!-- CURRENT WEIGHT -->
-
-  <div class="weight-main-card">
-
-    <span class="card-label">
-      Current Weight
-    </span>
-
-    <div class="current-weight">
-      <span id="currentWeight">—</span>
-      <small>kg</small>
-    </div>
-
-    <div id="weightChange" class="weight-change">
-      No weight recorded yet
-    </div>
-
-  </div>
-
-
-  <!-- WEIGHT STATS -->
-
-  <div class="weight-stats">
-
-    <div class="stat-card">
-      <span>Starting</span>
-      <strong>
-        <span id="startingWeight">167</span> kg
-      </strong>
-    </div>
-
-    <div class="stat-card">
-    <span>Lost</span>
-      <strong id="weightLost">—</strong>
-    </div>
-
-    <div class="stat-card">
-  <span>To Goal</span>
-  <strong id="weightToGoal">—</strong>
-</div>
-
-    <div class="stat-card">
-      <span>Weight Loss</span>
-      <strong id="weightLossPercent">—</strong>
-    </div>
-
-    <div class="stat-card">
-      <span>BMI</span>
-      <strong id="currentBMI">—</strong>
-    </div>
-
-  </div>
-
-
-  <!-- ADD WEIGHT -->
-
-  <div class="entry-card">
-
-    <h3>Record Weight</h3>
-
-    <div class="weight-input-row">
-
-      <input
-        id="weightInput"
-        type="number"
-        inputmode="decimal"
-        step="0.1"
-        min="1"
-        placeholder="Weight"
-      >
-
-      <span>kg</span>
-
-    </div>
-
-    <div class="date-input-row">
-
-  <label for="weightDate">
-    Date & time
-  </label>
-
-  <input
-    id="weightDate"
-    type="datetime-local"
-  >
-
-</div>
-
-    <button
-      id="saveWeightBtn"
-      class="main-button"
-    >
-      Save Weight
-    </button>
-
-    <div
-      id="weightMessage"
-      class="entry-message"
-    ></div>
-
-  </div>
-
-
-  <!-- GRAPH -->
-
-  <div class="weight-chart-card">
-
-    <h3>Weight Loss</h3>
-
-    <canvas id="weightChart"></canvas>
-
-  </div>
-
-
-  <!-- HISTORY -->
-
- <div class="weight-chart-card">
-  <h3>Progress to Goal</h3>
-
-  <div id="goalProgressText">
-    Set a goal weight to see progress.
-  </div>
-
-  <progress
-    id="goalProgressBar"
-    value="0"
-    max="100"
-    style="width:100%; margin-top:12px;"
-  ></progress>
-</div>
-  
-  <h2>Weight History</h2>
-
-  <div id="weightHistory">
-    <p>No weight entries yet.</p>
-  </div>
-
-</section>
-
-    <!-- CALORIES -->
+    <!-- =====================================
+         WEIGHT
+    ===================================== -->
 
     <section
-  id="calories"
-  class="tab-content"
->
-
-  <h2>Calorie Tracker</h2>
-
-  <div class="calorie-stats">
-
-    <div class="stat-card">
-      <span>Today</span>
-      <strong id="caloriesToday">0 kcal</strong>
-    </div>
-
-    <div class="stat-card">
-      <span>Last 24 Hours</span>
-      <strong id="calories24h">0 kcal</strong>
-    </div>
-
-    <div class="stat-card">
-      <span>Last 7 Days</span>
-      <strong id="calories7Days">0 kcal</strong>
-    </div>
-
-    <div class="stat-card">
-      <span>Average on Logged Days</span>
-      <strong id="caloriesDailyAverage">0 kcal</strong>
-    </div>
-
-    <div class="stat-card">
-  <span>7-Day Daily Average</span>
-  <strong id="calories7DayAverage">0 kcal</strong>
-</div>
-
-  </div>
-
-      
-  <!-- ADD CALORIES -->
-
-  <div class="entry-card">
-
-    <h3>Add Food / Drink</h3>
-
-    <div class="form-group">
-
-      <label for="foodDescription">
-        Food / description
-      </label>
-
-      <input
-        id="foodDescription"
-        type="text"
-        placeholder="e.g. Chicken sandwich"
-      >
-
-    </div>
-
-
-    <div class="form-group">
-
-      <label for="calorieInput">
-        Calories
-      </label>
-
-      <div class="calorie-input-row">
-
-        <input
-          id="calorieInput"
-          type="number"
-          inputmode="numeric"
-          min="1"
-          placeholder="500"
-        >
-
-        <span>kcal</span>
-
-      </div>
-
-    </div>
-
-
-    <div class="form-group">
-
-      <label for="foodDate">
-        Date & time
-      </label>
-
-      <input
-        id="foodDate"
-        type="datetime-local"
-      >
-
-    </div>
-
-
-    <button
-      id="saveCaloriesBtn"
-      class="main-button"
-    >
-      Add Calories
-    </button>
-
-    <div
-      id="calorieMessage"
-      class="entry-message"
-    ></div>
-
-  </div>
-
-<div class="weight-chart-card">
-
-<h3>Daily Calorie Intake</h3>
-
-<canvas id="calorieChart"></canvas>
-
-</div>
-
-<h2>Food History</h2>
-
-  <div id="calorieHistory">
-    <p>No calorie entries yet.</p>
-  </div>
-
-      <!-- ACTIVITY -->
-
-<h2>Activity</h2>
-
-<div class="activity-stats">
-
-  <div class="stat-card">
-    <span>Burned Today</span>
-    <strong id="activityToday">0 kcal</strong>
-  </div>
-
-  <div class="stat-card">
-    <span>Last 7 Days</span>
-    <strong id="activity7Days">0 kcal</strong>
-  </div>
-
-</div>
-
-
-<div class="entry-card">
-
-  <h3>Add Activity</h3>
-
-  <div class="form-group">
-
-    <label for="activityType">
-      Activity
-    </label>
-
-    <select id="activityType">
-
-      <option value="">
-        Select activity
-      </option>
-
-      <option value="walking">
-        Walking
-      </option>
-
-      <option value="brisk_walking">
-        Brisk Walking
-      </option>
-
-      <option value="cycling">
-        Cycling
-      </option>
-
-     <!DOCTYPE html>
-<html lang="en">
-
-<head>
-  <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
-
-  <title>Weight Journey</title>
-
-  <link
-    rel="stylesheet"
-    href="style.css"
-  >
-</head>
-
-<body>
-
-
-<!-- =====================================
-     LOGIN
-===================================== -->
-
-<div id="loginScreen">
-
-  <div class="entry-card">
-
-    <h2>Weight Journey Login</h2>
-
-    <input
-      id="loginEmail"
-      type="email"
-      placeholder="Email"
-      autocomplete="email"
+      id="weight"
+      class="tab-content"
     >
 
-    <input
-      id="loginPassword"
-      type="password"
-      placeholder="Password"
-      autocomplete="current-password"
-    >
+      <h2>Weight Progress</h2>
 
-    <button
-      id="loginBtn"
-      class="main-button"
-    >
-      Login
-    </button>
 
-    <div
-      id="loginMessage"
-      class="entry-message"
-    ></div>
+      <!-- CURRENT WEIGHT -->
 
-  </div>
+      <div class="weight-main-card">
 
-</div>
-
-
-<!-- =====================================
-     APP
-===================================== -->
-
-  <!-- HEADER -->
-
-  <header class="app-header">
-
-    <h1>Weight Journey</h1>
-
-    <button
-      id="logoutBtn"
-      class="main-button"
-      style="width:auto; padding:8px 16px;"
-    >
-      Logout
-    </button>
-
-    <p>
-      My progress, one day at a time
-    </p>
-
-  </header>
-
-
-  <!-- =====================================
-       NAVIGATION
-  ===================================== -->
-
-  <nav class="tabs">
-
-    <button
-      class="tab active"
-      data-tab="fasting"
-    >
-      Fasting
-    </button>
-
-    <button
-      class="tab"
-      data-tab="weight"
-    >
-      Weight
-    </button>
-
-    <button
-      class="tab"
-      data-tab="calories"
-    >
-      Calories
-    </button>
-
-    <button
-      class="tab"
-      data-tab="summary"
-    >
-      Summary
-    </button>
-
-  </nav>
-
-
-  <!-- =====================================
-       FASTING
-  ===================================== -->
-
-  <section
-    id="fasting"
-    class="tab-content active"
-  >
-
-    <h2>Current Fast</h2>
-
-
-    <div class="fast-card">
-
-      <div
-        id="fastTimer"
-        class="fast-timer"
-      >
-        00:00:00
-      </div>
-
-      <div
-        id="fastStatus"
-        class="fast-status"
-      >
-        Not fasting
-      </div>
-
-      <button
-        id="startFastBtn"
-        class="main-button"
-      >
-        Start Fast
-      </button>
-
-      <button
-        id="stopFastBtn"
-        class="main-button stop-button"
-        hidden
-      >
-        Stop Fast
-      </button>
-
-    </div>
-
-
-    <div class="fast-stats">
-
-      <div class="stat-card">
-        <span>Last Fast</span>
-        <strong id="lastFast">—</strong>
-      </div>
-
-      <div class="stat-card">
-        <span>Average Fast</span>
-        <strong id="averageFast">—</strong>
-      </div>
-
-      <div class="stat-card">
-        <span>Longest Fast</span>
-        <strong id="longestFast">—</strong>
-      </div>
-
-    </div>
-
-
-    <h2>Fasting History</h2>
-
-    <div id="fastingHistory">
-      <p>No fasting sessions yet.</p>
-    </div>
-
-  </section>
-
-
-  <!-- =====================================
-       WEIGHT
-  ===================================== -->
-
-  <section
-    id="weight"
-    class="tab-content"
-  >
-
-    <h2>Weight Progress</h2>
-
-
-    <!-- CURRENT WEIGHT -->
-
-    <div class="weight-main-card">
-
-      <span class="card-label">
-        Current Weight
-      </span>
-
-      <div class="current-weight">
-
-        <span id="currentWeight">—</span>
-
-        <small>kg</small>
-
-      </div>
-
-      <div
-        id="weightChange"
-        class="weight-change"
-      >
-        No weight recorded yet
-      </div>
-
-    </div>
-
-
-    <!-- WEIGHT STATS -->
-
-    <div class="weight-stats">
-
-      <div class="stat-card">
-
-        <span>Starting</span>
-
-        <strong>
-          <span id="startingWeight">167</span>
-          kg
-        </strong>
-
-      </div>
-
-
-      <div class="stat-card">
-
-        <span>Lost</span>
-
-        <strong id="weightLost">
-          —
-        </strong>
-
-      </div>
-
-
-      <div class="stat-card">
-
-        <span>To Goal</span>
-
-        <strong id="weightToGoal">
-          —
-        </strong>
-
-      </div>
-
-
-      <div class="stat-card">
-
-        <span>Weight Loss</span>
-
-        <strong id="weightLossPercent">
-          —
-        </strong>
-
-      </div>
-
-
-      <div class="stat-card">
-
-        <span>BMI</span>
-
-        <strong id="currentBMI">
-          —
-        </strong>
-
-      </div>
-
-    </div>
-
-
-    <!-- RECORD WEIGHT -->
-
-    <div class="entry-card">
-
-      <h3>Record Weight</h3>
-
-
-      <div class="weight-input-row">
-
-        <input
-          id="weightInput"
-          type="number"
-          inputmode="decimal"
-          step="0.1"
-          min="1"
-          placeholder="Weight"
-        >
-
-        <span>kg</span>
-
-      </div>
-
-
-      <div class="form-group">
-
-        <label for="weightDate">
-          Date & time
-        </label>
-
-        <input
-          id="weightDate"
-          type="datetime-local"
-        >
-
-      </div>
-
-
-      <button
-        id="saveWeightBtn"
-        class="main-button"
-      >
-        Save Weight
-      </button>
-
-      <div
-        id="weightMessage"
-        class="entry-message"
-      ></div>
-
-    </div>
-
-
-    <!-- WEIGHT GRAPH -->
-
-    <div class="weight-chart-card">
-
-      <h3>Weight Loss</h3>
-
-      <canvas id="weightChart"></canvas>
-
-    </div>
-
-
-    <!-- GOAL PROGRESS -->
-
-    <div class="weight-chart-card">
-
-      <h3>Progress to Goal</h3>
-
-      <div id="goalProgressText">
-        —
-      </div>
-
-      <progress
-        id="goalProgressBar"
-        value="0"
-        max="100"
-      ></progress>
-
-    </div>
-
-
-    <!-- WEIGHT HISTORY -->
-
-    <h2>Weight History</h2>
-
-    <div id="weightHistory">
-
-      <p>
-        No weight entries yet.
-      </p>
-
-    </div>
-
-  </section>
-
-
-  <!-- =====================================
-       CALORIES
-  ===================================== -->
-
-  <section
-    id="calories"
-    class="tab-content"
-  >
-
-    <h2>Calorie Tracker</h2>
-
-
-    <!-- CALORIE STATS -->
-
-    <div class="calorie-stats">
-
-      <div class="stat-card">
-
-        <span>Today</span>
-
-        <strong id="caloriesToday">
-          0 kcal
-        </strong>
-
-      </div>
-
-
-      <div class="stat-card">
-
-        <span>Last 24 Hours</span>
-
-        <strong id="calories24h">
-          0 kcal
-        </strong>
-
-      </div>
-
-
-      <div class="stat-card">
-
-        <span>Last 7 Days</span>
-
-        <strong id="calories7Days">
-          0 kcal
-        </strong>
-
-      </div>
-
-
-      <div class="stat-card">
-
-        <span>
-          Average on Logged Days
+        <span class="card-label">
+          Current Weight
         </span>
 
-        <strong id="caloriesDailyAverage">
-          0 kcal
-        </strong>
+        <div class="current-weight">
 
-      </div>
+          <span id="currentWeight">—</span>
 
+          <small>kg</small>
 
-      <div class="stat-card">
+        </div>
 
-        <span>
-          7-Day Daily Average
-        </span>
-
-        <strong id="calories7DayAverage">
-          0 kcal
-        </strong>
-
-      </div>
-
-    </div>
-
-
-    <!-- ADD FOOD -->
-
-    <div class="entry-card">
-
-      <h3>Add Food / Drink</h3>
-
-
-      <div class="form-group">
-
-        <label for="foodDescription">
-          Food / description
-        </label>
-
-        <input
-          id="foodDescription"
-          type="text"
-          placeholder="e.g. Chicken sandwich"
+        <div
+          id="weightChange"
+          class="weight-change"
         >
+          No weight recorded yet
+        </div>
 
       </div>
 
 
-      <div class="form-group">
+      <!-- WEIGHT STATS -->
 
-        <label for="calorieInput">
-          Calories
-        </label>
+      <div class="weight-stats">
 
-        <div class="calorie-input-row">
+        <div class="stat-card">
 
-          <input
-            id="calorieInput"
-            type="number"
-            inputmode="numeric"
-            min="1"
-            placeholder="500"
-          >
+          <span>Starting</span>
 
-          <span>kcal</span>
+          <strong>
+            <span id="startingWeight">167</span> kg
+          </strong>
+
+        </div>
+
+
+        <div class="stat-card">
+
+          <span>Lost</span>
+
+          <strong id="weightLost">
+            —
+          </strong>
+
+        </div>
+
+
+        <div class="stat-card">
+
+          <span>To Goal</span>
+
+          <strong id="weightToGoal">
+            —
+          </strong>
+
+        </div>
+
+
+        <div class="stat-card">
+
+          <span>Weight Loss</span>
+
+          <strong id="weightLossPercent">
+            —
+          </strong>
+
+        </div>
+
+
+        <div class="stat-card">
+
+          <span>BMI</span>
+
+          <strong id="currentBMI">
+            —
+          </strong>
 
         </div>
 
       </div>
 
 
-      <div class="form-group">
+      <!-- RECORD WEIGHT -->
 
-        <label for="foodDate">
-          Date & time
-        </label>
+      <div class="entry-card">
 
-        <input
-          id="foodDate"
-          type="datetime-local"
-        >
+        <h3>Record Weight</h3>
 
-      </div>
-
-
-      <button
-        id="saveCaloriesBtn"
-        class="main-button"
-      >
-        Add Calories
-      </button>
-
-      <div
-        id="calorieMessage"
-        class="entry-message"
-      ></div>
-
-    </div>
-
-
-    <!-- CALORIE CHART -->
-
-    <div class="weight-chart-card">
-
-      <h3>Daily Calorie Intake</h3>
-
-      <canvas id="calorieChart"></canvas>
-
-    </div>
-
-
-    <!-- FOOD HISTORY -->
-
-    <h2>Food History</h2>
-
-    <div id="calorieHistory">
-
-      <p>
-        No calorie entries yet.
-      </p>
-
-    </div>
-
-
-    <!-- =================================
-         ACTIVITY
-    ================================= -->
-
-    <h2>Activity</h2>
-
-
-    <div class="calorie-stats">
-
-      <div class="stat-card">
-
-        <span>Burned Today</span>
-
-        <strong id="activityToday">
-          0 kcal
-        </strong>
-
-      </div>
-
-
-      <div class="stat-card">
-
-        <span>Last 7 Days</span>
-
-        <strong id="activity7Days">
-          0 kcal
-        </strong>
-
-      </div>
-
-    </div>
-
-
-    <!-- ADD ACTIVITY -->
-
-    <div class="entry-card">
-
-      <h3>Add Activity</h3>
-
-
-      <div class="form-group">
-
-        <label for="activityType">
-          Activity
-        </label>
-
-        <select id="activityType">
-
-          <option value="">
-            Select activity
-          </option>
-
-          <option value="walking">
-            Walking
-          </option>
-
-          <option value="brisk_walking">
-            Brisk Walking
-          </option>
-
-          <option value="cycling">
-            Cycling
-          </option>
-
-          <option value="swimming">
-            Swimming
-          </option>
-
-          <option value="gym">
-            Gym / General Exercise
-          </option>
-
-        </select>
-
-      </div>
-
-
-      <div class="form-group">
-
-        <label for="activityDuration">
-          Duration
-        </label>
-
-        <div class="calorie-input-row">
+        <div class="weight-input-row">
 
           <input
-            id="activityDuration"
+            id="weightInput"
             type="number"
-            inputmode="numeric"
+            inputmode="decimal"
+            step="0.1"
             min="1"
-            placeholder="30"
+            placeholder="Weight"
           >
 
-          <span>minutes</span>
+          <span>kg</span>
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label for="weightDate">
+            Date & time
+          </label>
+
+          <input
+            id="weightDate"
+            type="datetime-local"
+          >
+
+        </div>
+
+
+        <button
+          id="saveWeightBtn"
+          class="main-button"
+        >
+          Save Weight
+        </button>
+
+        <div
+          id="weightMessage"
+          class="entry-message"
+        ></div>
+
+      </div>
+
+
+      <!-- WEIGHT GRAPH -->
+
+      <div class="weight-chart-card">
+
+        <h3>Weight Loss</h3>
+
+        <canvas id="weightChart"></canvas>
+
+      </div>
+
+
+      <!-- GOAL PROGRESS -->
+
+      <div class="weight-chart-card">
+
+        <h3>Progress to Goal</h3>
+
+        <div id="goalProgressText">
+          —
+        </div>
+
+        <progress
+          id="goalProgressBar"
+          value="0"
+          max="100"
+          style="width:100%; margin-top:12px;"
+        ></progress>
+
+      </div>
+
+
+      <!-- WEIGHT HISTORY -->
+
+      <h2>Weight History</h2>
+
+      <div id="weightHistory">
+
+        <p>No weight entries yet.</p>
+
+      </div>
+
+    </section>
+
+
+    <!-- =====================================
+         CALORIES
+    ===================================== -->
+
+    <section
+      id="calories"
+      class="tab-content"
+    >
+
+      <h2>Calorie Tracker</h2>
+
+
+      <!-- CALORIE STATS -->
+
+      <div class="calorie-stats">
+
+        <div class="stat-card">
+
+          <span>Today</span>
+
+          <strong id="caloriesToday">
+            0 kcal
+          </strong>
+
+        </div>
+
+
+        <div class="stat-card">
+
+          <span>Last 24 Hours</span>
+
+          <strong id="calories24h">
+            0 kcal
+          </strong>
+
+        </div>
+
+
+        <div class="stat-card">
+
+          <span>Last 7 Days</span>
+
+          <strong id="calories7Days">
+            0 kcal
+          </strong>
+
+        </div>
+
+
+        <div class="stat-card">
+
+          <span>Average on Logged Days</span>
+
+          <strong id="caloriesDailyAverage">
+            0 kcal
+          </strong>
+
+        </div>
+
+
+        <div class="stat-card">
+
+          <span>7-Day Daily Average</span>
+
+          <strong id="calories7DayAverage">
+            0 kcal
+          </strong>
 
         </div>
 
       </div>
 
 
-      <div class="form-group">
+      <!-- ADD FOOD -->
 
-        <label for="activityDate">
-          Date & time
-        </label>
+      <div class="entry-card">
 
-        <input
-          id="activityDate"
-          type="datetime-local"
+        <h3>Add Food / Drink</h3>
+
+        <div class="form-group">
+
+          <label for="foodDescription">
+            Food / description
+          </label>
+
+          <input
+            id="foodDescription"
+            type="text"
+            placeholder="e.g. Chicken sandwich"
+          >
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label for="calorieInput">
+            Calories
+          </label>
+
+          <div class="calorie-input-row">
+
+            <input
+              id="calorieInput"
+              type="number"
+              inputmode="numeric"
+              min="1"
+              placeholder="500"
+            >
+
+            <span>kcal</span>
+
+          </div>
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label for="foodDate">
+            Date & time
+          </label>
+
+          <input
+            id="foodDate"
+            type="datetime-local"
+          >
+
+        </div>
+
+
+        <button
+          id="saveCaloriesBtn"
+          class="main-button"
         >
+          Add Calories
+        </button>
+
+        <div
+          id="calorieMessage"
+          class="entry-message"
+        ></div>
 
       </div>
 
 
-      <button
-        id="saveActivityBtn"
-        class="main-button"
-      >
-        Add Activity
-      </button>
+      <!-- CALORIE CHART -->
 
-      <div
-        id="activityMessage"
-        class="entry-message"
-      ></div>
+      <div class="weight-chart-card">
 
-    </div>
+        <h3>Daily Calorie Intake</h3>
 
-
-    <!-- ACTIVITY CHART -->
-
-    <div class="weight-chart-card">
-
-      <h3>Daily Activity Calories</h3>
-
-      <canvas id="activityChart"></canvas>
-
-    </div>
-
-
-    <!-- ACTIVITY HISTORY -->
-
-    <h2>Activity History</h2>
-
-    <div id="activityHistory">
-
-      <p>
-        No activities yet.
-      </p>
-
-    </div>
-
-  </section>
-
-
-  <!-- =====================================
-       SUMMARY
-  ===================================== -->
-
-  <section
-    id="summary"
-    class="tab-content"
-  >
-
-
-    <!-- FASTING SUMMARY -->
-
-    <h2>Fasting Summary</h2>
-
-
-    <div class="weight-stats">
-
-      <div class="stat-card">
-
-        <span>Current Fast</span>
-
-        <strong id="summaryCurrentFast">
-          Not fasting
-        </strong>
+        <canvas id="calorieChart"></canvas>
 
       </div>
 
 
-      <div class="stat-card">
+      <!-- FOOD HISTORY -->
 
-        <span>Last Fast</span>
+      <h2>Food History</h2>
 
-        <strong id="summaryLastFast">
-          —
-        </strong>
+      <div id="calorieHistory">
 
-      </div>
-
-
-      <div class="stat-card">
-
-        <span>Average Fast</span>
-
-        <strong id="summaryAverageFast">
-          —
-        </strong>
+        <p>No calorie entries yet.</p>
 
       </div>
 
 
-      <div class="stat-card">
+      <!-- =====================================
+           ACTIVITY
+      ===================================== -->
 
-        <span>Longest Fast</span>
-
-        <strong id="summaryLongestFast">
-          —
-        </strong>
-
-      </div>
-
-    </div>
+      <h2>Activity</h2>
 
 
-    <!-- CALORIE BALANCE -->
+      <div class="activity-stats">
 
-    <h2>Calorie Balance</h2>
-    <div class="weight-stats">
+        <div class="stat-card">
 
-      <div class="stat-card">
+          <span>Burned Today</span>
 
-        <span>
-          Calories Eaten Today
-        </span>
+          <strong id="activityToday">
+            0 kcal
+          </strong>
 
-        <strong id="summaryCaloriesToday">
-          —
-        </strong>
-
-      </div>
+        </div>
 
 
-      <div class="stat-card">
+        <div class="stat-card">
 
-        <span>
-          Activity Calories (Gross)
-        </span>
+          <span>Last 7 Days</span>
 
-        <strong id="summaryActivityToday">
-          —
-        </strong>
+          <strong id="activity7Days">
+            0 kcal
+          </strong>
+
+        </div>
 
       </div>
 
 
-      <div class="stat-card">
+      <!-- ADD ACTIVITY -->
 
-        <span>
-          Estimated Deficit Today
-        </span>
+      <div class="entry-card">
 
-        <strong id="summaryDeficitToday">
-          —
-        </strong>
+        <h3>Add Activity</h3>
+
+        <div class="form-group">
+
+          <label for="activityType">
+            Activity
+          </label>
+
+          <select id="activityType">
+
+            <option value="">
+              Select activity
+            </option>
+
+            <option value="walking">
+              Walking
+            </option>
+
+            <option value="brisk_walking">
+              Brisk Walking
+            </option>
+
+            <option value="cycling">
+              Cycling
+            </option>
+
+            <option value="swimming">
+              Swimming
+            </option>
+
+            <option value="gym">
+              Gym / General Exercise
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label for="activityDuration">
+            Duration
+          </label>
+
+          <div class="calorie-input-row">
+
+            <input
+              id="activityDuration"
+              type="number"
+              inputmode="numeric"
+              min="1"
+              placeholder="30"
+            >
+
+            <span>minutes</span>
+
+          </div>
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label for="activityDate">
+            Date & time
+          </label>
+
+          <input
+            id="activityDate"
+            type="datetime-local"
+          >
+
+        </div>
+
+
+        <button
+          id="saveActivityBtn"
+          class="main-button"
+        >
+          Add Activity
+        </button>
+
+        <div
+          id="activityMessage"
+          class="entry-message"
+        ></div>
 
       </div>
 
 
-      <div class="stat-card">
+      <!-- ACTIVITY CHART -->
 
-        <span id="summary7DaysLabel">
-          Deficit — Last 7 Days
-        </span>
+      <div class="weight-chart-card">
 
-        <strong id="summaryDeficit7Days">
-          —
-        </strong>
+        <h3>Daily Activity Calories</h3>
+
+        <canvas id="activityChart"></canvas>
 
       </div>
 
 
-      <div class="stat-card">
+      <!-- ACTIVITY HISTORY -->
 
-        <span id="summary30DaysLabel">
-          Deficit — Last 30 Days
-        </span>
+      <h2>Activity History</h2>
 
-        <strong id="summaryDeficit30Days">
-          —
-        </strong>
+      <div id="activityHistory">
+
+        <p>No activities yet.</p>
+
+      </div>
+
+    </section>
+
+
+    <!-- =====================================
+         SUMMARY
+    ===================================== -->
+
+    <section
+      id="summary"
+      class="tab-content"
+    >
+
+      <!-- FASTING SUMMARY -->
+
+      <h2>Fasting Summary</h2>
+
+      <div class="weight-stats">
+
+        <div class="stat-card">
+
+          <span>Current Fast</span>
+
+          <strong id="summaryCurrentFast">
+            Not fasting
+          </strong>
+
+        </div>
+
+
+        <div class="stat-card">
+
+          <span>Last Fast</span>
+
+          <strong id="summaryLastFast">
+            —
+          </strong>
+
+        </div>
+
+
+        <div class="stat-card">
+
+          <span>Average Fast</span>
+
+          <strong id="summaryAverageFast">
+            —
+          </strong>
+
+        </div>
+
+
+        <div class="stat-card">
+
+          <span>Longest Fast</span>
+
+          <strong id="summaryLongestFast">
+            —
+          </strong>
+
+        </div>
 
       </div>
 
 
-      <div class="stat-card">
+      <!-- CALORIE BALANCE -->
 
-        <span id="weightEquivalentLabel">
-          Estimated Weight Equivalent
-        </span>
+      <h2>Calorie Balance</h2>
 
-        <strong id="estimatedWeightEquivalent">
-          —
-        </strong>
+      <div class="weight-stats">
+
+        <div class="stat-card">
+
+          <span>
+            Calories Eaten Today
+          </span>
+
+          <strong id="summaryCaloriesToday">
+            —
+          </strong>
+
+        </div>
+
+
+        <div class="stat-card">
+
+          <span>
+            Activity Calories (Gross)
+          </span>
+
+          <strong id="summaryActivityToday">
+            —
+          </strong>
+
+        </div>
+
+
+        <div class="stat-card">
+
+          <span>
+            Estimated Deficit Today
+          </span>
+
+          <strong id="summaryDeficitToday">
+            —
+          </strong>
+
+        </div>
+
+
+        <div class="stat-card">
+
+          <span id="summary7DaysLabel">
+            Deficit — Last 7 Days
+          </span>
+
+          <strong id="summaryDeficit7Days">
+            —
+          </strong>
+
+        </div>
+
+
+        <div class="stat-card">
+
+          <span id="summary30DaysLabel">
+            Deficit — Last 30 Days
+          </span>
+
+          <strong id="summaryDeficit30Days">
+            —
+          </strong>
+
+        </div>
+
+
+        <div class="stat-card">
+
+          <span id="weightEquivalentLabel">
+            Estimated Weight Equivalent
+          </span>
+
+          <strong id="estimatedWeightEquivalent">
+            —
+          </strong>
+
+        </div>
 
       </div>
 
-    </div>
+
+      <!-- DEFICIT CHART -->
+
+      <div class="weight-chart-card">
+
+        <h3>Daily Calorie Deficit</h3>
+
+        <canvas id="deficitChart"></canvas>
+
+        <p class="history-time">
+          Positive = calorie deficit •
+          Negative = calorie surplus
+        </p>
+
+      </div>
+
+    </section>
+
+  </main>
 
 
-    <!-- DEFICIT CHART -->
+  <!-- SCRIPTS -->
 
-    <div class="weight-chart-card">
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+  ></script>
 
-      <h3>Daily Calorie Deficit</h3>
+  <script
+    src="https://cdn.jsdelivr.net/npm/chart.js"
+  ></script>
 
-      <canvas id="deficitChart"></canvas>
-
-      <p class="history-time">
-        Positive = calorie deficit •
-        Negative = calorie surplus
-      </p>
-
-    </div>
-
-  </section>
-
-
-</main>
-
-
-<!-- =====================================
-     SCRIPTS
-===================================== -->
-
-<script
-  src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
-></script>
-
-<script
-  src="https://cdn.jsdelivr.net/npm/chart.js"
-></script>
-
-<script src="app.js"></script>
-
+  <script src="app.js"></script>
 
 </body>
+
 </html>
