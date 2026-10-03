@@ -887,7 +887,6 @@ async function saveWeight() {
 
 
   await loadWeights();
-  await loadEnergySummary();
   await updateTodayDeficit();
 
 }
@@ -1391,7 +1390,6 @@ async function deleteWeight(id) {
 
 
 await loadWeights();
-await loadEnergySummary();
 await updateTodayDeficit();
 
 }
@@ -2942,46 +2940,6 @@ function calculateBMR(
 // LOAD ENERGY SUMMARY
 // ----------------------------------------
 
-async function loadEnergySummary() {
-
-  const weight =
-    await getLatestWeight();
-
-  const bmr =
-    calculateBMR(
-      weight
-    );
-
-
-  summaryWeight.textContent =
-    weight.toFixed(1) +
-    " kg";
-
-
-  summaryBMR.textContent =
-    bmr +
-    " kcal";
-
-
-  bmrDisplay.textContent =
-    bmr;
-  const activityMultiplier =
-ACTIVITY_MULTIPLIER;
-
-
-const tdee =
-  Math.round(
-    bmr *
-    activityMultiplier
-  );
-
-
-summaryTDEE.textContent =
-  tdee +
-  " kcal";
-
-}
-
 const ACTIVITY_MULTIPLIER = 1.3;
 
 async function updateTodayDeficit() {
@@ -3968,7 +3926,6 @@ loadWeights();
 loadCalories();
 loadActivities();
 loadFastingSummary();
-loadEnergySummary();
 updateTodayDeficit();
 
   }
