@@ -25,22 +25,13 @@ tabs.forEach(tab => {
     const selectedTab =
       tab.dataset.tab;
 
-
-    // Remove active state from all tabs
-
     tabs.forEach(item => {
       item.classList.remove("active");
     });
 
-
-    // Hide all sections
-
     tabContents.forEach(section => {
       section.classList.remove("active");
     });
-
-
-    // Activate selected tab
 
     tab.classList.add("active");
 
@@ -51,6 +42,7 @@ tabs.forEach(tab => {
   });
 
 });
+
 
 // ========================================
 // FASTING
@@ -96,7 +88,6 @@ function formatFastDuration(startTime) {
       (now - start) / 1000
     );
 
-
   const hours =
     Math.floor(
       totalSeconds / 3600
@@ -110,7 +101,6 @@ function formatFastDuration(startTime) {
   const seconds =
     totalSeconds % 60;
 
-
   return (
     String(hours).padStart(2, "0") +
     ":" +
@@ -120,6 +110,8 @@ function formatFastDuration(startTime) {
   );
 
 }
+
+
 // ----------------------------------------
 // UPDATE TIMER
 // ----------------------------------------
@@ -143,6 +135,7 @@ function updateFastTimer() {
 
 }
 
+
 // ----------------------------------------
 // SHOW ACTIVE FAST
 // ----------------------------------------
@@ -158,9 +151,7 @@ function showActiveFast() {
   stopFastBtn.hidden =
     false;
 
-
   updateFastTimer();
-
 
   if (timerInterval) {
 
@@ -170,7 +161,6 @@ function showActiveFast() {
 
   }
 
-
   timerInterval =
     setInterval(
       updateFastTimer,
@@ -178,6 +168,7 @@ function showActiveFast() {
     );
 
 }
+
 
 // ----------------------------------------
 // START FAST
@@ -191,10 +182,8 @@ async function startFast() {
   startFastBtn.textContent =
     "Starting...";
 
-
   const now =
     new Date().toISOString();
-
 
   const { data, error } =
     await db
@@ -204,7 +193,6 @@ async function startFast() {
       })
       .select()
       .single();
-
 
   if (error) {
 
@@ -223,10 +211,8 @@ async function startFast() {
     return;
   }
 
-
   activeFast =
     data;
-
 
   startFastBtn.disabled =
     false;
@@ -234,10 +220,11 @@ async function startFast() {
   startFastBtn.textContent =
     "Start Fast";
 
-
   showActiveFast();
 
 }
+
+
 // ----------------------------------------
 // STOP FAST
 // ----------------------------------------
@@ -248,7 +235,6 @@ async function stopFast() {
     return;
   }
 
-
   const confirmed =
     confirm(
       "Are you sure you want to stop your fast?"
@@ -258,17 +244,14 @@ async function stopFast() {
     return;
   }
 
-
   stopFastBtn.disabled =
     true;
 
   stopFastBtn.textContent =
     "Stopping...";
 
-
   const endTime =
     new Date().toISOString();
-
 
   const { error } =
     await db
@@ -280,7 +263,6 @@ async function stopFast() {
         "id",
         activeFast.id
       );
-
 
   if (error) {
 
@@ -299,7 +281,6 @@ async function stopFast() {
     return;
   }
 
-
   if (timerInterval) {
 
     clearInterval(
@@ -308,19 +289,17 @@ async function stopFast() {
 
     timerInterval =
       null;
-  }
 
+  }
 
   activeFast =
     null;
-
 
   fastTimer.textContent =
     "00:00:00";
 
   fastStatus.textContent =
     "Not fasting";
-
 
   stopFastBtn.hidden =
     true;
@@ -331,19 +310,17 @@ async function stopFast() {
   stopFastBtn.textContent =
     "Stop Fast";
 
+  startFastBtn.hidden =
+    false;
 
- startFastBtn.hidden =
-  false;
-
-
-// Refresh fasting statistics and history
-
-await loadFastingHistory();
+  await loadFastingHistory();
   await loadFastingSummary();
 
 }
+
+
 // ----------------------------------------
-// BUTTON
+// FASTING BUTTONS
 // ----------------------------------------
 
 startFastBtn.addEventListener(
@@ -356,9 +333,11 @@ stopFastBtn.addEventListener(
   stopFast
 );
 
+
 // ----------------------------------------
 // LOAD ACTIVE FAST
 // ----------------------------------------
+
 async function loadActiveFast() {
 
   const { data, error } =
@@ -378,7 +357,6 @@ async function loadActiveFast() {
       .limit(1)
       .maybeSingle();
 
-
   if (error) {
 
     console.error(
@@ -388,7 +366,6 @@ async function loadActiveFast() {
 
     return;
   }
-
 
   if (!data) {
 
@@ -402,7 +379,7 @@ async function loadActiveFast() {
       "Not fasting";
 
     summaryCurrentFast.textContent =
-  "Not fasting";
+      "Not fasting";
 
     startFastBtn.hidden =
       false;
@@ -413,14 +390,14 @@ async function loadActiveFast() {
     return;
   }
 
-
   activeFast =
     data;
-
 
   showActiveFast();
 
 }
+
+
 // ========================================
 // FASTING HISTORY
 // ========================================
@@ -447,19 +424,21 @@ async function loadFastingHistory() {
       "longestFast"
     );
 
-
   const { data, error } =
     await db
       .from("fasting_sessions")
       .select("*")
-      .not("ended_at", "is", null)
+      .not(
+        "ended_at",
+        "is",
+        null
+      )
       .order(
         "started_at",
         {
           ascending: false
         }
       );
-
 
   if (error) {
 
@@ -474,7 +453,6 @@ async function loadFastingHistory() {
     return;
   }
 
-
   if (
     !data ||
     data.length === 0
@@ -483,17 +461,17 @@ async function loadFastingHistory() {
     historyArea.innerHTML =
       "<p>No completed fasts yet.</p>";
 
-    lastFast.textContent = "—";
-    averageFast.textContent = "—";
-    longestFast.textContent = "—";
+    lastFast.textContent =
+      "—";
+
+    averageFast.textContent =
+      "—";
+
+    longestFast.textContent =
+      "—";
 
     return;
   }
-
-
-  // --------------------------------------
-  // CALCULATE DURATIONS
-  // --------------------------------------
 
   const sessions =
     data.map(session => {
@@ -513,7 +491,6 @@ async function loadFastingHistory() {
           (end - start) /
           60000
         );
-
 
       return {
         ...session,
@@ -535,7 +512,6 @@ async function loadFastingHistory() {
     const mins =
       minutes % 60;
 
-
     return (
       hours +
       "h " +
@@ -546,16 +522,11 @@ async function loadFastingHistory() {
   }
 
 
-  // --------------------------------------
-  // STATISTICS
-  // --------------------------------------
-
   lastFast.textContent =
     formatMinutes(
       sessions[0]
         .durationMinutes
     );
-
 
   const totalMinutes =
     sessions.reduce(
@@ -565,19 +536,16 @@ async function loadFastingHistory() {
       0
     );
 
-
   const averageMinutes =
     Math.round(
       totalMinutes /
       sessions.length
     );
 
-
   averageFast.textContent =
     formatMinutes(
       averageMinutes
     );
-
 
   const longestMinutes =
     Math.max(
@@ -587,20 +555,13 @@ async function loadFastingHistory() {
       )
     );
 
-
   longestFast.textContent =
     formatMinutes(
       longestMinutes
     );
 
-
-  // --------------------------------------
-  // HISTORY
-  // --------------------------------------
-
   historyArea.innerHTML =
     "";
-
 
   sessions.forEach(session => {
 
@@ -609,10 +570,8 @@ async function loadFastingHistory() {
         "div"
       );
 
-
     card.className =
       "history-card";
-
 
     const date =
       session.start
@@ -625,7 +584,6 @@ async function loadFastingHistory() {
           }
         );
 
-
     const startTime =
       session.start
         .toLocaleTimeString(
@@ -636,7 +594,6 @@ async function loadFastingHistory() {
           }
         );
 
-
     const endTime =
       session.end
         .toLocaleTimeString(
@@ -646,7 +603,6 @@ async function loadFastingHistory() {
             minute: "2-digit"
           }
         );
-
 
     card.innerHTML =
       "<div>" +
@@ -660,8 +616,7 @@ async function loadFastingHistory() {
         "</div>" +
       "</div>" +
 
-        "<div class='history-right'>" +
-
+      "<div class='history-right'>" +
         "<strong>" +
           formatMinutes(
             session.durationMinutes
@@ -675,9 +630,7 @@ async function loadFastingHistory() {
           ")'>" +
           "Delete" +
         "</button>" +
-
       "</div>";
-
 
     historyArea.appendChild(
       card
@@ -686,6 +639,7 @@ async function loadFastingHistory() {
   });
 
 }
+
 
 async function deleteFast(id) {
 
@@ -723,10 +677,6 @@ async function deleteFast(id) {
 
 }
 
-// ----------------------------------------
-// LOAD APP
-// Data loads after successful login
-// ----------------------------------------
 
 // ========================================
 // WEIGHT TRACKING
@@ -737,19 +687,29 @@ const HEIGHT_CM = 180;
 const GOAL_WEIGHT = 80;
 
 const weightInput =
-  document.getElementById("weightInput");
+  document.getElementById(
+    "weightInput"
+  );
 
 const weightDate =
-  document.getElementById("weightDate");
+  document.getElementById(
+    "weightDate"
+  );
 
 const saveWeightBtn =
-  document.getElementById("saveWeightBtn");
+  document.getElementById(
+    "saveWeightBtn"
+  );
 
 const weightMessage =
-  document.getElementById("weightMessage");
+  document.getElementById(
+    "weightMessage"
+  );
 
 const currentWeight =
-  document.getElementById("currentWeight");
+  document.getElementById(
+    "currentWeight"
+  );
 
 const weightLost =
   document.getElementById(
@@ -772,16 +732,25 @@ const goalProgressBar =
   );
 
 const weightLossPercent =
-  document.getElementById("weightLossPercent");
+  document.getElementById(
+    "weightLossPercent"
+  );
 
 const currentBMI =
-  document.getElementById("currentBMI");
+  document.getElementById(
+    "currentBMI"
+  );
 
 const weightChange =
-  document.getElementById("weightChange");
+  document.getElementById(
+    "weightChange"
+  );
 
 const weightHistory =
-  document.getElementById("weightHistory");
+  document.getElementById(
+    "weightHistory"
+  );
+
 
 function setDefaultWeightDate() {
 
@@ -804,8 +773,8 @@ function setDefaultWeightDate() {
 
 }
 
-setDefaultWeightDate();
 
+setDefaultWeightDate();
 
 // ----------------------------------------
 // SAVE WEIGHT
@@ -814,8 +783,9 @@ setDefaultWeightDate();
 async function saveWeight() {
 
   const weight =
-    Number(weightInput.value);
-
+    Number(
+      weightInput.value
+    );
 
   if (
     !weight ||
@@ -828,7 +798,6 @@ async function saveWeight() {
     return;
   }
 
-
   saveWeightBtn.disabled =
     true;
 
@@ -838,20 +807,18 @@ async function saveWeight() {
   weightMessage.textContent =
     "";
 
-
   const { error } =
     await db
       .from("weight_entries")
       .insert({
         weight_kg: weight,
         recorded_at:
-  weightDate.value
-    ? new Date(
-        weightDate.value
-      ).toISOString()
-    : new Date().toISOString()
+          weightDate.value
+            ? new Date(
+                weightDate.value
+              ).toISOString()
+            : new Date().toISOString()
       });
-
 
   if (error) {
 
@@ -869,7 +836,6 @@ async function saveWeight() {
     return;
   }
 
-
   weightInput.value =
     "";
 
@@ -878,13 +844,11 @@ async function saveWeight() {
   weightMessage.textContent =
     "Weight saved";
 
-
   saveWeightBtn.disabled =
     false;
 
   saveWeightBtn.textContent =
     "Save Weight";
-
 
   await loadWeights();
   await updateTodayDeficit();
@@ -893,7 +857,7 @@ async function saveWeight() {
 
 
 // ----------------------------------------
-// LOAD WEIGHTS
+// CHART INSTANCES
 // ----------------------------------------
 
 let weightChartInstance = null;
@@ -902,6 +866,10 @@ let calorieChartInstance = null;
 let activityChartInstance = null;
 
 
+// ----------------------------------------
+// WEIGHT CHART
+// ----------------------------------------
+
 function drawWeightChart(entries) {
 
   const canvas =
@@ -909,17 +877,12 @@ function drawWeightChart(entries) {
       "weightChart"
     );
 
-
   if (!canvas) {
     return;
   }
 
-
-  // Oldest → newest for the graph
-
   const chartData =
     [...entries].reverse();
-
 
   const labels =
     chartData.map(entry => {
@@ -939,7 +902,6 @@ function drawWeightChart(entries) {
 
     });
 
-
   const weights =
     chartData.map(
       entry =>
@@ -948,13 +910,11 @@ function drawWeightChart(entries) {
         )
     );
 
-
   if (weightChartInstance) {
 
     weightChartInstance.destroy();
 
   }
-
 
   weightChartInstance =
     new Chart(
@@ -1031,6 +991,11 @@ function drawWeightChart(entries) {
 
 }
 
+
+// ----------------------------------------
+// LOAD WEIGHTS
+// ----------------------------------------
+
 async function loadWeights() {
 
   const { data, error } =
@@ -1044,7 +1009,6 @@ async function loadWeights() {
         }
       );
 
-
   if (error) {
 
     console.error(
@@ -1054,7 +1018,6 @@ async function loadWeights() {
 
     return;
   }
-
 
   if (
     !data ||
@@ -1067,6 +1030,9 @@ async function loadWeights() {
     weightLost.textContent =
       "—";
 
+    weightToGoal.textContent =
+      "—";
+
     weightLossPercent.textContent =
       "—";
 
@@ -1076,15 +1042,20 @@ async function loadWeights() {
     weightChange.textContent =
       "No weight recorded yet";
 
+    goalProgressBar.value =
+      0;
+
+    goalProgressText.textContent =
+      "No weight recorded yet";
+
     weightHistory.innerHTML =
       "<p>No weight entries yet.</p>";
+
+    drawWeightChart([]);
 
     return;
   }
 
-  // --------------------------------------
-  // CURRENT WEIGHT
-  // --------------------------------------
 
   const latestWeight =
     Number(
@@ -1096,91 +1067,63 @@ async function loadWeights() {
     latestWeight.toFixed(1);
 
 
-  // --------------------------------------
-  // TOTAL WEIGHT LOST
-  // --------------------------------------
-
   const lost =
     STARTING_WEIGHT -
     latestWeight;
 
-
-weightLost.textContent =
+  weightLost.textContent =
     lost.toFixed(1) +
     " kg";
 
 
- const savedGoal = GOAL_WEIGHT;
+  const toGoal =
+    latestWeight -
+    GOAL_WEIGHT;
 
+  const totalGoalLoss =
+    STARTING_WEIGHT -
+    GOAL_WEIGHT;
 
-  if (
-    savedGoal &&
-    savedGoal > 0
-  ) {
+  const progressMade =
+    STARTING_WEIGHT -
+    latestWeight;
 
-    const toGoal =
-      latestWeight -
-      savedGoal;
-
-    const totalGoalLoss =
-      STARTING_WEIGHT -
-      savedGoal;
-
-    const progressMade =
-      STARTING_WEIGHT -
-      latestWeight;
-
-    const goalProgress =
-      totalGoalLoss > 0
-        ? Math.min(
-            100,
-            Math.max(
-              0,
-              (
-                progressMade /
-                totalGoalLoss
-              ) * 100
-            )
+  const goalProgress =
+    totalGoalLoss > 0
+      ? Math.min(
+          100,
+          Math.max(
+            0,
+            (
+              progressMade /
+              totalGoalLoss
+            ) * 100
           )
-        : 0;
+        )
+      : 0;
 
-    goalProgressBar.value =
-      goalProgress;
 
-    goalProgressText.textContent =
-      goalProgress.toFixed(1) +
-      "% complete";
+  goalProgressBar.value =
+    goalProgress;
 
-    if (toGoal > 0) {
+  goalProgressText.textContent =
+    goalProgress.toFixed(1) +
+    "% complete";
 
-      weightToGoal.textContent =
-        toGoal.toFixed(1) +
-        " kg";
 
-    } else {
-
-      weightToGoal.textContent =
-        "Goal reached";
-
-    }
-
-    } else {
+  if (toGoal > 0) {
 
     weightToGoal.textContent =
-      "—";
+      toGoal.toFixed(1) +
+      " kg";
 
-    goalProgressBar.value =
-      0;
+  } else {
 
-    goalProgressText.textContent =
-      "Set a goal weight to see progress.";
+    weightToGoal.textContent =
+      "Goal reached";
 
   }
 
-
-  // --------------------------------------
-  // PERCENTAGE WEIGHT LOSS
-  // --------------------------------------
 
   const percentageLost =
     (
@@ -1188,19 +1131,13 @@ weightLost.textContent =
       STARTING_WEIGHT
     ) * 100;
 
-
   weightLossPercent.textContent =
     percentageLost.toFixed(1) +
     "%";
 
 
-  // --------------------------------------
-  // BMI
-  // --------------------------------------
-
   const heightMetres =
     HEIGHT_CM / 100;
-
 
   const bmi =
     latestWeight /
@@ -1209,14 +1146,9 @@ weightLost.textContent =
       heightMetres
     );
 
-
   currentBMI.textContent =
     bmi.toFixed(1);
 
-
-  // --------------------------------------
-  // CHANGE FROM PREVIOUS ENTRY
-  // --------------------------------------
 
   if (data.length > 1) {
 
@@ -1225,11 +1157,9 @@ weightLost.textContent =
         data[1].weight_kg
       );
 
-
     const change =
       latestWeight -
       previousWeight;
-
 
     if (change < 0) {
 
@@ -1257,99 +1187,92 @@ weightLost.textContent =
 
   }
 
-// --------------------------------------
-// WEIGHT GRAPH
-// --------------------------------------
 
-drawWeightChart(data);
-
-// --------------------------------------
-// WEIGHT HISTORY
-// --------------------------------------
-
-weightHistory.innerHTML =
-  "";
+  drawWeightChart(data);
 
 
-data.forEach(entry => {
+  weightHistory.innerHTML =
+    "";
 
-  const card =
-    document.createElement(
-      "div"
-    );
+  data.forEach(entry => {
 
-  card.className =
-    "history-card";
+    const card =
+      document.createElement(
+        "div"
+      );
 
-
-  const date =
-    new Date(
-      entry.recorded_at
-    );
+    card.className =
+      "history-card";
 
 
-  const dateText =
-    date.toLocaleDateString(
-      "en-GB",
-      {
-        day: "2-digit",
-        month: "short",
-        year: "numeric"
-      }
-    );
+    const date =
+      new Date(
+        entry.recorded_at
+      );
 
 
-  const timeText =
-    date.toLocaleTimeString(
-      "en-GB",
-      {
-        hour: "2-digit",
-        minute: "2-digit"
-      }
-    );
+    const dateText =
+      date.toLocaleDateString(
+        "en-GB",
+        {
+          day: "2-digit",
+          month: "short",
+          year: "numeric"
+        }
+      );
 
 
-  card.innerHTML =
-    "<div>" +
+    const timeText =
+      date.toLocaleTimeString(
+        "en-GB",
+        {
+          hour: "2-digit",
+          minute: "2-digit"
+        }
+      );
 
-      "<strong>" +
-        dateText +
-      "</strong>" +
 
-      "<div class='history-time'>" +
-        timeText +
+    card.innerHTML =
+      "<div>" +
+
+        "<strong>" +
+          dateText +
+        "</strong>" +
+
+        "<div class='history-time'>" +
+          timeText +
+        "</div>" +
+
       "</div>" +
 
-    "</div>" +
+      "<div class='history-right'>" +
 
-    "<div class='history-right'>" +
+        "<strong>" +
+          Number(
+            entry.weight_kg
+          ).toFixed(1) +
+          " kg" +
+        "</strong>" +
 
-      "<strong>" +
-        Number(
-          entry.weight_kg
-        ).toFixed(1) +
-        " kg" +
-      "</strong>" +
+        "<button " +
+          "class='delete-entry-btn' " +
+          "onclick='deleteWeight(" +
+          entry.id +
+          ")'>" +
+          "Delete" +
+        "</button>" +
 
-      "<button " +
-        "class='delete-entry-btn' " +
-        "onclick='deleteWeight(" +
-        entry.id +
-        ")'>" +
-        "Delete" +
-      "</button>" +
-
-    "</div>";
+      "</div>";
 
 
-  weightHistory.appendChild(
-    card
-  );
+    weightHistory.appendChild(
+      card
+    );
 
-});
-
+  });
 
 }
+
 
 // ----------------------------------------
 // DELETE WEIGHT
@@ -1366,7 +1289,6 @@ async function deleteWeight(id) {
     return;
   }
 
-
   const { error } =
     await db
       .from("weight_entries")
@@ -1375,7 +1297,6 @@ async function deleteWeight(id) {
         "id",
         id
       );
-
 
   if (error) {
 
@@ -1388,25 +1309,17 @@ async function deleteWeight(id) {
     return;
   }
 
-
-await loadWeights();
-await updateTodayDeficit();
+  await loadWeights();
+  await updateTodayDeficit();
 
 }
 
-// ----------------------------------------
-// WEIGHT BUTTON
-// ----------------------------------------
 
 saveWeightBtn.addEventListener(
   "click",
   saveWeight
 );
 
-
-// ----------------------------------------
-// LOAD WEIGHT DATA
-// ----------------------------------------
 
 // ========================================
 // CALORIE TRACKING
@@ -1498,7 +1411,9 @@ function setDefaultFoodDate() {
 
 }
 
+
 setDefaultFoodDate();
+
 
 // ----------------------------------------
 // SAVE CALORIES
@@ -1542,7 +1457,8 @@ async function saveCalories() {
       .from("calorie_entries")
       .insert({
         calories: calories,
-        description: description || null,
+        description:
+          description || null,
         eaten_at:
           foodDate.value
             ? new Date(
@@ -1577,27 +1493,26 @@ async function saveCalories() {
 
   setDefaultFoodDate();
 
-
   calorieMessage.textContent =
-  "Calories saved";
+    "Calories saved";
 
+  await loadCalories();
+  await updateTodayDeficit();
 
-await loadCalories();
-await updateTodayDeficit();
-
-
-saveCaloriesBtn.disabled =
-  false;
+  saveCaloriesBtn.disabled =
+    false;
 
   saveCaloriesBtn.textContent =
     "Add Calories";
 
 }
 
+
 saveCaloriesBtn.addEventListener(
   "click",
   saveCalories
 );
+
 
 // ----------------------------------------
 // LOAD CALORIES
@@ -1616,7 +1531,6 @@ async function loadCalories() {
         }
       );
 
-
   if (error) {
 
     console.error(
@@ -1630,7 +1544,6 @@ async function loadCalories() {
 
   const entries =
     data || [];
-
 
   const now =
     new Date();
@@ -1654,10 +1567,18 @@ async function loadCalories() {
 
 
   const sevenDaysAgo =
-    new Date(
-      now.getTime() -
-      7 * 24 * 60 * 60 * 1000
-    );
+    new Date();
+
+  sevenDaysAgo.setDate(
+    sevenDaysAgo.getDate() - 6
+  );
+
+  sevenDaysAgo.setHours(
+    0,
+    0,
+    0,
+    0
+  );
 
 
   let todayTotal = 0;
@@ -1718,171 +1639,165 @@ async function loadCalories() {
     " kcal";
 
   summaryCaloriesToday.textContent =
-  Math.round(todayTotal) +
-  " kcal";
-
+    Math.round(todayTotal) +
+    " kcal";
 
   calories24h.textContent =
     Math.round(total24h) +
     " kcal";
 
-
   calories7Days.textContent =
     Math.round(total7Days) +
     " kcal";
 
+
   calories7DayAverage.textContent =
-  Math.round(
-    total7Days / 7
-  ) +
-  " kcal";
-  
+    Math.round(
+      total7Days / 7
+    ) +
+    " kcal";
+
 
   const trackedCalorieDays =
-  new Set(
-    entries
-      .filter(
-        entry =>
-          new Date(
-            entry.eaten_at
-          ) >= sevenDaysAgo
-      )
-      .map(
-        entry =>
-          new Date(
-            entry.eaten_at
-          ).toLocaleDateString(
-            "en-CA"
-          )
-      )
-  ).size;
+    new Set(
+      entries
+        .filter(
+          entry => {
+
+            const date =
+              new Date(
+                entry.eaten_at
+              );
+
+            return (
+              date >= sevenDaysAgo &&
+              date <= now
+            );
+
+          }
+        )
+        .map(
+          entry =>
+            new Date(
+              entry.eaten_at
+            ).toLocaleDateString(
+              "en-CA"
+            )
+        )
+    ).size;
 
 
- caloriesDailyAverage.textContent =
-  trackedCalorieDays > 0
-    ? Math.round(
-        total7Days /
-        trackedCalorieDays
-      ) +
-      " kcal"
-    : "0 kcal";
-
-  // ----------------------------------------
-// DAILY CALORIE CHART
-// ----------------------------------------
-
-const calorieChartLabels =
-  [];
-
-const calorieChartValues =
-  [];
-
-  const calorieChartStart =
-  new Date();
-
-calorieChartStart.setDate(
-  calorieChartStart.getDate() - 6
-);
-
-calorieChartStart.setHours(
-  0, 0, 0, 0
-);
+  caloriesDailyAverage.textContent =
+    trackedCalorieDays > 0
+      ? Math.round(
+          total7Days /
+          trackedCalorieDays
+        ) +
+        " kcal"
+      : "0 kcal";
 
 
-for (
-  let i = 0;
-  i < 7;
-  i++
-) {
+  const calorieChartLabels =
+    [];
 
-  const dayStart =
-    new Date(
-      calorieChartStart
+  const calorieChartValues =
+    [];
+
+
+  for (
+    let i = 0;
+    i < 7;
+    i++
+  ) {
+
+    const dayStart =
+      new Date(
+        sevenDaysAgo
+      );
+
+    dayStart.setDate(
+      dayStart.getDate() + i
     );
 
-  dayStart.setDate(
-    dayStart.getDate() + i
-  );
+
+    const dayEnd =
+      new Date(
+        dayStart
+      );
+
+    dayEnd.setDate(
+      dayEnd.getDate() + 1
+    );
 
 
-  const dayEnd =
-    new Date(dayStart);
+    const caloriesForDay =
+      entries
+        .filter(
+          entry => {
 
-  dayEnd.setDate(
-    dayEnd.getDate() + 1
-  );
+            const entryDate =
+              new Date(
+                entry.eaten_at
+              );
 
-  const caloriesForDay =
-  (data || [])
-    .filter(
-      entry => {
+            return (
+              entryDate >= dayStart &&
+              entryDate < dayEnd
+            );
 
-        const entryDate =
-          new Date(
-            entry.eaten_at
-          );
-
-        return (
-          entryDate >= dayStart &&
-          entryDate < dayEnd
+          }
+        )
+        .reduce(
+          (total, entry) =>
+            total +
+            Number(
+              entry.calories
+            ),
+          0
         );
 
-      }
-    )
-    .reduce(
-      (total, entry) =>
-        total +
-        Number(entry.calories),
-      0
+
+    calorieChartLabels.push(
+      dayStart.toLocaleDateString(
+        "en-GB",
+        {
+          day: "2-digit",
+          month: "short"
+        }
+      )
     );
 
 
-calorieChartLabels.push(
-  dayStart.toLocaleDateString(
-    "en-GB",
-    {
-      day: "2-digit",
-      month: "short"
-    }
-  )
-);
+    calorieChartValues.push(
+      Math.round(
+        caloriesForDay
+      )
+    );
+
+  }
 
 
-calorieChartValues.push(
-  Math.round(
-    caloriesForDay
-  )
-);
+  const latestWeight =
+    await getLatestWeight();
 
-}
+  const currentBMR =
+    calculateBMR(
+      latestWeight
+    );
 
-const currentWeight =
-  await getLatestWeight();
+  const calorieChartExpenditure =
+    Math.round(
+      currentBMR *
+      ACTIVITY_MULTIPLIER
+    );
 
-const currentBMR =
-  calculateBMR(
-    currentWeight
+
+  drawCalorieChart(
+    calorieChartLabels,
+    calorieChartValues,
+    calorieChartExpenditure
   );
 
-const currentActivityMultiplier =
- ACTIVITY_MULTIPLIER;
-
-const calorieChartExpenditure =
-  Math.round(
-    currentBMR *
-    currentActivityMultiplier
-  );
-  
- drawCalorieChart(
-  calorieChartLabels,
-  calorieChartValues,
-  calorieChartExpenditure
-);
-  
-
-    // --------------------------------------
-  // FOOD HISTORY
-  // --------------------------------------
 
   calorieHistory.innerHTML =
     "";
@@ -1955,11 +1870,13 @@ const calorieChartExpenditure =
 
       "</div>" +
 
-          "<div class='history-right'>" +
+      "<div class='history-right'>" +
 
         "<strong>" +
           Math.round(
-            Number(entry.calories)
+            Number(
+              entry.calories
+            )
           ) +
           " kcal" +
         "</strong>" +
@@ -1974,12 +1891,15 @@ const calorieChartExpenditure =
 
       "</div>";
 
+
     calorieHistory.appendChild(
       card
     );
 
   });
+
 }
+
 
 // ----------------------------------------
 // DELETE CALORIE ENTRY
@@ -1996,7 +1916,6 @@ async function deleteCalories(id) {
     return;
   }
 
-
   const { error } =
     await db
       .from("calorie_entries")
@@ -2005,7 +1924,6 @@ async function deleteCalories(id) {
         "id",
         id
       );
-
 
   if (error) {
 
@@ -2017,7 +1935,6 @@ async function deleteCalories(id) {
 
     return;
   }
-
 
   await loadCalories();
   await updateTodayDeficit();
@@ -2099,7 +2016,9 @@ function setDefaultActivityDate() {
 
 }
 
+
 setDefaultActivityDate();
+
 
 // ----------------------------------------
 // ACTIVITY CALORIE ESTIMATE
@@ -2137,19 +2056,15 @@ async function getLatestWeight() {
       error
     );
 
-    console.trace(
-    console.error(
-  "CALL STACK:",
-  new Error().stack
-);
-    );
-
     return STARTING_WEIGHT;
+
   }
 
 
   if (!data) {
+
     return STARTING_WEIGHT;
+
   }
 
 
@@ -2158,16 +2073,17 @@ async function getLatestWeight() {
   );
 
 }
-  
-  function calculateActivityCalories(
-    met,
-    weightKg,
-    minutes
-  ) {
-  
-    const calories =
-      (
-        met *
+
+
+function calculateActivityCalories(
+  met,
+  weightKg,
+  minutes
+) {
+
+  const calories =
+    (
+      met *
       3.5 *
       weightKg /
       200
@@ -2180,6 +2096,7 @@ async function getLatestWeight() {
   );
 
 }
+
 
 async function getWeightAtDate(
   targetDate
@@ -2213,11 +2130,14 @@ async function getWeightAtDate(
     );
 
     return STARTING_WEIGHT;
+
   }
 
 
   if (!data) {
+
     return STARTING_WEIGHT;
+
   }
 
 
@@ -2226,6 +2146,8 @@ async function getWeightAtDate(
   );
 
 }
+
+
 // ----------------------------------------
 // SAVE ACTIVITY
 // ----------------------------------------
@@ -2247,6 +2169,7 @@ async function saveActivity() {
       "Please select an activity.";
 
     return;
+
   }
 
 
@@ -2259,6 +2182,7 @@ async function saveActivity() {
       "Please enter a valid duration.";
 
     return;
+
   }
 
 
@@ -2275,10 +2199,8 @@ async function saveActivity() {
   const weight =
     await getLatestWeight();
 
-
   const met =
     activityMETs[type];
-
 
   const caloriesBurned =
     calculateActivityCalories(
@@ -2318,6 +2240,7 @@ async function saveActivity() {
       "Add Activity";
 
     return;
+
   }
 
 
@@ -2330,18 +2253,18 @@ async function saveActivity() {
   setDefaultActivityDate();
 
 
- activityMessage.textContent =
-  "Activity saved — estimated " +
-  caloriesBurned +
-  " kcal burned";
+  activityMessage.textContent =
+    "Activity saved — estimated " +
+    caloriesBurned +
+    " kcal burned";
 
 
-await loadActivities();
-await updateTodayDeficit();
+  await loadActivities();
+  await updateTodayDeficit();
 
 
-saveActivityBtn.disabled =
-  false;
+  saveActivityBtn.disabled =
+    false;
 
   saveActivityBtn.textContent =
     "Add Activity";
@@ -2353,6 +2276,7 @@ saveActivityBtn.addEventListener(
   "click",
   saveActivity
 );
+
 
 // ----------------------------------------
 // LOAD ACTIVITIES
@@ -2380,92 +2304,111 @@ async function loadActivities() {
     );
 
     return;
+
   }
 
 
   const entries =
     data || [];
 
-  const activityChartLabels = [];
-const activityChartValues = [];
 
-const activityChartStart =
-  new Date();
+  const activityChartLabels =
+    [];
 
-activityChartStart.setDate(
-  activityChartStart.getDate() - 6
-);
+  const activityChartValues =
+    [];
 
-activityChartStart.setHours(
-  0, 0, 0, 0
-);
 
-for (let i = 0; i < 7; i++) {
+  const activityChartStart =
+    new Date();
 
-  const dayStart =
-    new Date(
-      activityChartStart
-    );
-
-  dayStart.setDate(
-    dayStart.getDate() + i
+  activityChartStart.setDate(
+    activityChartStart.getDate() - 6
   );
 
-  const dayEnd =
-    new Date(
-      dayStart
-    );
-
-  dayEnd.setDate(
-    dayEnd.getDate() + 1
+  activityChartStart.setHours(
+    0,
+    0,
+    0,
+    0
   );
 
-  const caloriesForDay =
-    entries
-      .filter(entry => {
 
-        const entryDate =
-          new Date(
-            entry.performed_at
-          );
+  for (
+    let i = 0;
+    i < 7;
+    i++
+  ) {
 
-        return (
-          entryDate >= dayStart &&
-          entryDate < dayEnd
-        );
-
-      })
-      .reduce(
-        (total, entry) =>
-          total +
-          Number(
-            entry.calories_burned
-          ),
-        0
+    const dayStart =
+      new Date(
+        activityChartStart
       );
 
-  activityChartLabels.push(
-    dayStart.toLocaleDateString(
-      "en-GB",
-      {
-        day: "2-digit",
-        month: "short"
-      }
-    )
-  );
+    dayStart.setDate(
+      dayStart.getDate() + i
+    );
 
-  activityChartValues.push(
-    Math.round(
-      caloriesForDay
-    )
-  );
 
-}
+    const dayEnd =
+      new Date(
+        dayStart
+      );
+
+    dayEnd.setDate(
+      dayEnd.getDate() + 1
+    );
+
+
+    const caloriesForDay =
+      entries
+        .filter(entry => {
+
+          const entryDate =
+            new Date(
+              entry.performed_at
+            );
+
+          return (
+            entryDate >= dayStart &&
+            entryDate < dayEnd
+          );
+
+        })
+        .reduce(
+          (total, entry) =>
+            total +
+            Number(
+              entry.calories_burned
+            ),
+          0
+        );
+
+
+    activityChartLabels.push(
+      dayStart.toLocaleDateString(
+        "en-GB",
+        {
+          day: "2-digit",
+          month: "short"
+        }
+      )
+    );
+
+
+    activityChartValues.push(
+      Math.round(
+        caloriesForDay
+      )
+    );
+
+  }
+
 
   drawActivityChart(
-  activityChartLabels,
-  activityChartValues
-);
+    activityChartLabels,
+    activityChartValues
+  );
 
 
   const now =
@@ -2482,16 +2425,20 @@ for (let i = 0; i < 7; i++) {
   );
 
 
- const sevenDaysAgo =
-  new Date();
+  const sevenDaysAgo =
+    new Date();
 
-sevenDaysAgo.setDate(
-  sevenDaysAgo.getDate() - 6
-);
+  sevenDaysAgo.setDate(
+    sevenDaysAgo.getDate() - 6
+  );
 
-sevenDaysAgo.setHours(
-  0, 0, 0, 0
-);
+  sevenDaysAgo.setHours(
+    0,
+    0,
+    0,
+    0
+  );
+
 
   let burnedToday = 0;
   let burned7Days = 0;
@@ -2535,21 +2482,25 @@ sevenDaysAgo.setHours(
 
 
   activityToday.textContent =
-    Math.round(burnedToday) +
+    Math.round(
+      burnedToday
+    ) +
     " kcal";
 
+
   summaryActivityToday.textContent =
-  Math.round(burnedToday) +
-  " kcal";
+    Math.round(
+      burnedToday
+    ) +
+    " kcal";
 
 
   activity7Days.textContent =
-    Math.round(burned7Days) +
+    Math.round(
+      burned7Days
+    ) +
     " kcal";
 
-    // --------------------------------------
-  // ACTIVITY HISTORY
-  // --------------------------------------
 
   activityHistory.innerHTML =
     "";
@@ -2561,6 +2512,7 @@ sevenDaysAgo.setHours(
       "<p>No activities yet.</p>";
 
     return;
+
   }
 
 
@@ -2639,7 +2591,7 @@ sevenDaysAgo.setHours(
 
       "</div>" +
 
-            "<div class='history-right'>" +
+      "<div class='history-right'>" +
 
         "<strong>" +
           Math.round(
@@ -2660,13 +2612,15 @@ sevenDaysAgo.setHours(
 
       "</div>";
 
+
     activityHistory.appendChild(
       card
     );
 
   });
-  
+
 }
+
 
 // ----------------------------------------
 // DELETE ACTIVITY
@@ -2703,6 +2657,7 @@ async function deleteActivity(id) {
     );
 
     return;
+
   }
 
 
@@ -2711,28 +2666,15 @@ async function deleteActivity(id) {
 
 }
 
+
 // ========================================
-// ENERGY SUMMARY
+// SUMMARY
 // ========================================
 
 const AGE = 38;
-const SEX = "male";
 
-const PROFILE_HEIGHT_CM =
-  HEIGHT_CM;
+const ACTIVITY_MULTIPLIER = 1.3;
 
-const PROFILE_STARTING_WEIGHT =
-  STARTING_WEIGHT;
-
-const summaryWeight =
-  document.getElementById(
-    "summaryWeight"
-  );
-
-const summaryBMR =
-  document.getElementById(
-    "summaryBMR"
-  );
 
 const summaryLastFast =
   document.getElementById(
@@ -2747,136 +2689,6 @@ const summaryAverageFast =
 const summaryLongestFast =
   document.getElementById(
     "summaryLongestFast"
-  );
-
-async function loadFastingSummary() {
-
-  const { data, error } =
-    await db
-      .from("fasting_sessions")
-      .select(
-        "started_at, ended_at"
-      )
-      .not(
-        "ended_at",
-        "is",
-        null
-      )
-      .order(
-        "ended_at",
-        {
-          ascending: false
-        }
-      );
-
-  if (error) {
-    console.error(error);
-    return;
-  }
-
-  const sessions =
-    data || [];
-
-  if (
-    sessions.length === 0
-  ) {
-
-    summaryLastFast.textContent =
-      "—";
-
-    summaryAverageFast.textContent =
-      "—";
-
-    summaryLongestFast.textContent =
-      "—";
-
-    return;
-  }
-
-    const durations =
-    sessions.map(
-      session => {
-
-        const start =
-          new Date(
-            session.started_at
-          );
-
-        const end =
-          new Date(
-            session.ended_at
-          );
-
-        return (
-          end - start
-        );
-
-      }
-    );
-    const lastFast =
-    durations[0];
-
-  const averageFast =
-    durations.reduce(
-      (total, duration) =>
-        total + duration,
-      0
-    ) /
-    durations.length;
-
-  const longestFast =
-    Math.max(
-      ...durations
-    );
-    function formatSummaryDuration(
-    milliseconds
-  ) {
-
-    const totalMinutes =
-      Math.round(
-        milliseconds /
-        (1000 * 60)
-      );
-
-    const hours =
-      Math.floor(
-        totalMinutes / 60
-      );
-
-    const minutes =
-      totalMinutes % 60;
-
-    return (
-      hours +
-      "h " +
-      minutes +
-      "m"
-    );
-  }
-    summaryLastFast.textContent =
-    formatSummaryDuration(
-      lastFast
-    );
-
-  summaryAverageFast.textContent =
-    formatSummaryDuration(
-      averageFast
-    );
-
-  summaryLongestFast.textContent =
-    formatSummaryDuration(
-      longestFast
-    );
-}
-
-const bmrDisplay =
-  document.getElementById(
-    "bmrDisplay"
-  );
-
-const summaryTDEE =
-  document.getElementById(
-    "summaryTDEE"
   );
 
 const summaryDeficitToday =
@@ -2914,8 +2726,157 @@ const summary30DaysLabel =
     "summary30DaysLabel"
   );
 
+
 // ----------------------------------------
-// CALCULATE BMR
+// FASTING SUMMARY
+// ----------------------------------------
+
+async function loadFastingSummary() {
+
+  const { data, error } =
+    await db
+      .from("fasting_sessions")
+      .select(
+        "started_at, ended_at"
+      )
+      .not(
+        "ended_at",
+        "is",
+        null
+      )
+      .order(
+        "ended_at",
+        {
+          ascending: false
+        }
+      );
+
+
+  if (error) {
+
+    console.error(
+      "Unable to load fasting summary:",
+      error
+    );
+
+    return;
+
+  }
+
+
+  const sessions =
+    data || [];
+
+
+  if (
+    sessions.length === 0
+  ) {
+
+    summaryLastFast.textContent =
+      "—";
+
+    summaryAverageFast.textContent =
+      "—";
+
+    summaryLongestFast.textContent =
+      "—";
+
+    return;
+
+  }
+
+
+  const durations =
+    sessions.map(session => {
+
+      const start =
+        new Date(
+          session.started_at
+        );
+
+      const end =
+        new Date(
+          session.ended_at
+        );
+
+      return (
+        end - start
+      );
+
+    });
+
+
+  const lastFast =
+    durations[0];
+
+
+  const averageFast =
+    durations.reduce(
+      (total, duration) =>
+        total + duration,
+      0
+    ) /
+    durations.length;
+
+
+  const longestFast =
+    Math.max(
+      ...durations
+    );
+
+
+  function formatSummaryDuration(
+    milliseconds
+  ) {
+
+    const totalMinutes =
+      Math.round(
+        milliseconds /
+        (1000 * 60)
+      );
+
+    const hours =
+      Math.floor(
+        totalMinutes / 60
+      );
+
+    const minutes =
+      totalMinutes % 60;
+
+
+    return (
+      hours +
+      "h " +
+      minutes +
+      "m"
+    );
+
+  }
+
+
+  summaryLastFast.textContent =
+    formatSummaryDuration(
+      lastFast
+    );
+
+
+  summaryAverageFast.textContent =
+    formatSummaryDuration(
+      averageFast
+    );
+
+
+  summaryLongestFast.textContent =
+    formatSummaryDuration(
+      longestFast
+    );
+
+}
+
+
+// ----------------------------------------
+// BMR CALCULATION
+// Internal calculation only
 // ----------------------------------------
 
 function calculateBMR(
@@ -2941,34 +2902,45 @@ function calculateBMR(
 
 }
 
-
 // ----------------------------------------
-// LOAD ENERGY SUMMARY
+// CALORIE DEFICIT SUMMARY
 // ----------------------------------------
-
-const ACTIVITY_MULTIPLIER = 1.3;
 
 async function updateTodayDeficit() {
 
-  const { data: weightHistory } =
-  await db
-    .from("weight_entries")
-    .select(
-      "weight_kg, recorded_at"
-    )
-    .order(
-      "recorded_at",
-      {
-        ascending: true
-      }
+  const { data: weightHistory, error: weightError } =
+    await db
+      .from("weight_entries")
+      .select(
+        "weight_kg, recorded_at"
+      )
+      .order(
+        "recorded_at",
+        {
+          ascending: true
+        }
+      );
+
+
+  if (weightError) {
+
+    console.error(
+      "Unable to load weight history:",
+      weightError
     );
 
-    function getHistoricalWeight(
+    return;
+
+  }
+
+
+  function getHistoricalWeight(
     targetDate
   ) {
 
     let historicalWeight =
       STARTING_WEIGHT;
+
 
     (weightHistory || [])
       .forEach(entry => {
@@ -2977,6 +2949,7 @@ async function updateTodayDeficit() {
           new Date(
             entry.recorded_at
           );
+
 
         if (
           entryDate <= targetDate
@@ -2991,559 +2964,206 @@ async function updateTodayDeficit() {
 
       });
 
+
     return historicalWeight;
 
   }
-  
+
+
   const weight =
     await getLatestWeight();
 
-  const bmr =
-    calculateBMR(weight);
 
-  const multiplier =
-   ACTIVITY_MULTIPLIER;
+  const bmr =
+    calculateBMR(
+      weight
+    );
+
 
   const dailyExpenditure =
-    bmr * multiplier;
+    bmr *
+    ACTIVITY_MULTIPLIER;
 
 
-  // Burn accumulated so far today
   const now =
     new Date();
+
 
   const startToday =
     new Date();
 
   startToday.setHours(
-    0, 0, 0, 0
+    0,
+    0,
+    0,
+    0
   );
+
 
   const sevenDaysAgo =
-  new Date(
-    now.getTime() -
-    (7 * 24 * 60 * 60 * 1000)
-  );
+    new Date(
+      now.getTime() -
+      (
+        7 *
+        24 *
+        60 *
+        60 *
+        1000
+      )
+    );
 
 
-const thirtyDaysAgo =
-  new Date(
-    now.getTime() -
-    (30 * 24 * 60 * 60 * 1000)
-  );
+  const thirtyDaysAgo =
+    new Date(
+      now.getTime() -
+      (
+        30 *
+        24 *
+        60 *
+        60 *
+        1000
+      )
+    );
+
 
   const dayFraction =
-    (now - startToday) /
-    (24 * 60 * 60 * 1000);
+    (
+      now -
+      startToday
+    ) /
+    (
+      24 *
+      60 *
+      60 *
+      1000
+    );
+
 
   const baselineBurnSoFar =
     dailyExpenditure *
     dayFraction;
 
-  // Calories eaten today
 
-const { data: foodData } =
-  await db
-   .from("calorie_entries")
-.select("calories,eaten_at")
-.gte(
-  "eaten_at",
-  thirtyDaysAgo.toISOString()
-)
-.lte(
-  "eaten_at",
-  now.toISOString()
-);
+  // --------------------------------------
+  // FOOD DATA
+  // --------------------------------------
 
-const caloriesEatenToday =
-  (foodData || [])
-    .filter(
-      entry =>
+  const {
+    data: foodData,
+    error: foodError
+  } =
+    await db
+      .from("calorie_entries")
+      .select(
+        "calories, eaten_at"
+      )
+      .gte(
+        "eaten_at",
+        thirtyDaysAgo.toISOString()
+      )
+      .lte(
+        "eaten_at",
+        now.toISOString()
+      );
+
+
+  if (foodError) {
+
+    console.error(
+      "Unable to load calorie data:",
+      foodError
+    );
+
+    return;
+
+  }
+
+
+  // --------------------------------------
+  // ACTIVITY DATA
+  // --------------------------------------
+
+  const {
+    data: activityData,
+    error: activityError
+  } =
+    await db
+      .from("activity_entries")
+      .select(
+        "calories_burned, duration_minutes, performed_at"
+      )
+      .gte(
+        "performed_at",
+        thirtyDaysAgo.toISOString()
+      )
+      .lte(
+        "performed_at",
+        now.toISOString()
+      );
+
+
+  if (activityError) {
+
+    console.error(
+      "Unable to load activity data:",
+      activityError
+    );
+
+    return;
+
+  }
+
+
+  // --------------------------------------
+  // TODAY
+  // --------------------------------------
+
+  const caloriesEatenToday =
+    (foodData || [])
+      .filter(entry =>
+
         new Date(
           entry.eaten_at
         ) >= startToday
-    )
-    .reduce(
-      (total, entry) =>
-        total +
-        Number(entry.calories),
-      0
-    );
-  const caloriesEaten7Days =
-  (foodData || [])
-    .filter(
-      entry =>
-        new Date(
-          entry.eaten_at
-        ) >= sevenDaysAgo
-    )
-    .reduce(
-      (total, entry) =>
-        total +
-        Number(entry.calories),
-      0
-    );
 
-
-const caloriesEaten30Days =
-  (foodData || [])
-    .reduce(
-      (total, entry) =>
-        total +
-        Number(entry.calories),
-      0
-    );
-
-  const foodDates =
-  (foodData || [])
-    .map(
-      entry =>
-        new Date(entry.eaten_at)
-    );
-
-
-const firstFoodDate =
-  foodDates.length
-    ? new Date(
-        Math.min(
-          ...foodDates.map(
-            date => date.getTime()
-          )
-        )
       )
-    : null;
-
-  const trackingStart7Days =
-  firstFoodDate &&
-  firstFoodDate > sevenDaysAgo
-    ? firstFoodDate
-    : sevenDaysAgo;
-
-
-const trackingStart30Days =
-  firstFoodDate &&
-  firstFoodDate > thirtyDaysAgo
-    ? firstFoodDate
-    : thirtyDaysAgo;
-
-
-const trackedDays7 =
-  firstFoodDate
-    ? (
-        now -
-        trackingStart7Days
-      ) /
-      (
-        24 *
-        60 *
-        60 *
-        1000
-      )
-    : 0;
-
-
-const trackedDays30 =
-  firstFoodDate
-    ? (
-        now -
-        trackingStart30Days
-      ) /
-      (
-        24 *
-        60 *
-        60 *
-        1000
-      )
-    : 0;
-  
-  // Logged activity today
-
-const { data: activityData } =
-  await db
- .from("activity_entries")
-.select(
-  "calories_burned,duration_minutes,performed_at"
-)
-.gte(
-  "performed_at",
-  thirtyDaysAgo.toISOString()
-)
-.lte(
-  "performed_at",
-  now.toISOString()
-);
-
-
-let extraActivityToday =
-  0;
-
-let extraActivity7Days =
-  0;
-
-let extraActivity30Days =
-  0;
-
-
-(activityData || []).forEach(
-  activity => {
-
-    const grossBurn =
-      Number(
-        activity.calories_burned
-      );
-
-    const minutes =
-      Number(
-        activity.duration_minutes
+      .reduce(
+        (total, entry) =>
+          total +
+          Number(
+            entry.calories
+          ),
+        0
       );
 
 
-    // Normal expenditure already included
-    // during these minutes
-
-    const normalBurnDuringActivity =
-      (
-        dailyExpenditure /
-        1440
-      ) *
-      minutes;
+  let extraActivityToday =
+    0;
 
 
-    const extraBurn =
-      Math.max(
-        0,
-        grossBurn -
-        normalBurnDuringActivity
-      );
+  (activityData || [])
+    .filter(entry =>
 
+      new Date(
+        entry.performed_at
+      ) >= startToday
 
-const activityTime =
-  new Date(
-    activity.performed_at
-  );
-
-
-if (
-  activityTime >= startToday
-) {
-
-  extraActivityToday +=
-    extraBurn;
-
-}
-
-
-if (
-  firstFoodDate &&
-  activityTime >= trackingStart7Days
-) {
-
-  extraActivity7Days +=
-    extraBurn;
-
-}
-
-
-if (
-  firstFoodDate &&
-  activityTime >= trackingStart30Days
-) {
-
-  extraActivity30Days +=
-    extraBurn;
-
-}
-
-  }
-);
-// Total estimated burn so far today
-
-const totalBurnSoFar =
-  baselineBurnSoFar +
-  extraActivityToday;
-
-
-// Estimated deficit so far today
-
-const deficitToday =
-  totalBurnSoFar -
-  caloriesEatenToday;
-
-  // Estimated deficit for last 7 days
-
-let historicalBaseline7Days = 0;
-let historicalBaseline30Days = 0;
-
-if (firstFoodDate) {
-
-  const baselineStart =
-    new Date(
-      trackingStart30Days
-    );
-
-  const baselineEnd =
-    new Date();
-
-  baselineStart.setHours(
-    0, 0, 0, 0
-  );
-
-  baselineEnd.setHours(
-    0, 0, 0, 0
-  );
-
-for (
-  let day =
-    new Date(baselineStart);
-
-  day <= baselineEnd;
-
-  day.setDate(
-    day.getDate() + 1
-  )
-) {
-
-  const dayStart =
-    new Date(day);
-
-  const weightForDay =
-    getHistoricalWeight(
-      dayStart
-    );
-
-  const bmrForDay =
-    calculateBMR(
-      weightForDay
-    );
-
-  const expenditureForDay =
-    bmrForDay *
-    multiplier;
-
-  const dayEnd =
-  new Date(
-    dayStart
-  );
-
-dayEnd.setDate(
-  dayEnd.getDate() + 1
-);
-
-const effectiveStart =
-  dayStart <
-  trackingStart30Days
-    ? trackingStart30Days
-    : dayStart;
-
-const effectiveEnd =
-  dayEnd > now
-    ? now
-    : dayEnd;
-
-const fractionOfDay =
-  Math.max(
-    0,
-    (
-      effectiveEnd -
-      effectiveStart
-    ) /
-    (
-      24 *
-      60 *
-      60 *
-      1000
     )
-  );
-
-historicalBaseline30Days +=
-  expenditureForDay *
-  fractionOfDay;
-
-const sevenDayEffectiveStart =
-  dayStart <
-  trackingStart7Days
-    ? trackingStart7Days
-    : dayStart;
-
-const sevenDayEffectiveEnd =
-  dayEnd > now
-    ? now
-    : dayEnd;
-
-const sevenDayFraction =
-  Math.max(
-    0,
-    (
-      sevenDayEffectiveEnd -
-      sevenDayEffectiveStart
-    ) /
-    (
-      24 *
-      60 *
-      60 *
-      1000
-    )
-  );
-
-if (
-  dayEnd >
-  trackingStart7Days
-) {
-
-  historicalBaseline7Days +=
-    expenditureForDay *
-    sevenDayFraction;
-
-}
-  
-}
-
-}
-  
-const totalBurn7Days =
-  historicalBaseline7Days +
-  extraActivity7Days;
-
-
-const deficit7Days =
-  totalBurn7Days -
-  caloriesEaten7Days;
-
-  // Estimated deficit for last 30 days
-
-const totalBurn30Days =
-  historicalBaseline30Days +
-  extraActivity30Days;
-
-const deficit30Days =
-  totalBurn30Days -
-  caloriesEaten30Days;
-
-const weightEquivalentKg =
-  deficit30Days /
-  7700;
-
-// Daily deficit chart data
-
-const deficitLabels =
-  [];
-
-const deficitValues =
-  [];
-
-if (firstFoodDate) {
-
-  const chartStartDate =
-    new Date(
-      trackingStart30Days
-    );
-
-  chartStartDate.setHours(
-    0, 0, 0, 0
-  );
-
-
-  const chartEndDate =
-    new Date();
-
-  chartEndDate.setHours(
-    0, 0, 0, 0
-  );
-
-  for (
-  let day =
-    new Date(chartStartDate);
-
-  day <= chartEndDate;
-
-  day.setDate(
-    day.getDate() + 1
-  )
-) {
-
-  const dayStart =
-    new Date(day);
-
-  const dayEnd =
-    new Date(day);
-
-      const weightForDay =
-    getHistoricalWeight(
-      dayStart
-    );
-
-  const bmrForDay =
-    calculateBMR(
-      weightForDay
-    );
-
-  const expenditureForDay =
-    bmrForDay *
-    multiplier;
-    
-  dayEnd.setDate(
-    dayEnd.getDate() + 1
-  );
-
-    const foodForDay =
-  (foodData || [])
-    .filter(
-      entry => {
-
-        const entryDate =
-          new Date(
-            entry.eaten_at
-          );
-
-        return (
-          entryDate >= dayStart &&
-          entryDate < dayEnd
-        );
-
-      }
-    )
-    .reduce(
-      (total, entry) =>
-        total +
-        Number(entry.calories),
-      0
-    );
-
-  let extraActivityForDay =
-  0;
-
-
-(activityData || [])
-  .filter(
-    activity => {
-
-      const activityTime =
-        new Date(
-          activity.performed_at
-        );
-
-      return (
-        activityTime >= dayStart &&
-        activityTime < dayEnd
-      );
-
-    }
-  )
-  .forEach(
-    activity => {
+    .forEach(entry => {
 
       const grossBurn =
         Number(
-          activity.calories_burned
-        );
+          entry.calories_burned
+        ) || 0;
+
 
       const minutes =
         Number(
-          activity.duration_minutes
-        );
+          entry.duration_minutes
+        ) || 0;
 
 
-      const normalBurn =
+      const baselineForActivity =
         (
           dailyExpenditure /
           1440
@@ -3551,126 +3171,463 @@ if (firstFoodDate) {
         minutes;
 
 
-      extraActivityForDay +=
+      const extraBurn =
         Math.max(
           0,
           grossBurn -
-          normalBurn
+          baselineForActivity
+        );
+
+
+      extraActivityToday +=
+        extraBurn;
+
+    });
+
+
+  const todayDeficit =
+    baselineBurnSoFar +
+    extraActivityToday -
+    caloriesEatenToday;
+
+
+  summaryDeficitToday.textContent =
+    Math.round(
+      todayDeficit
+    ) +
+    " kcal";
+
+
+  // --------------------------------------
+  // TRACKING START
+  // --------------------------------------
+
+  const foodDates =
+    (foodData || [])
+      .map(entry =>
+        new Date(
+          entry.eaten_at
+        )
+      );
+
+
+  const firstFoodDate =
+    foodDates.length
+      ? new Date(
+          Math.min(
+            ...foodDates.map(
+              date =>
+                date.getTime()
+            )
+          )
+        )
+      : null;
+
+
+  if (!firstFoodDate) {
+
+    summaryDeficit7Days.textContent =
+      "—";
+
+    summaryDeficit30Days.textContent =
+      "—";
+
+    estimatedWeightEquivalent.textContent =
+      "—";
+
+    summary7DaysLabel.textContent =
+      "Deficit — Last 7 Days";
+
+    summary30DaysLabel.textContent =
+      "Deficit — Last 30 Days";
+
+    weightEquivalentLabel.textContent =
+      "Weight Equivalent";
+
+    drawDeficitChart(
+      [],
+      []
+    );
+
+    return;
+
+  }
+
+
+  const trackingStart =
+    firstFoodDate >
+    thirtyDaysAgo
+      ? firstFoodDate
+      : thirtyDaysAgo;
+
+
+  // --------------------------------------
+  // DAILY DEFICIT CALCULATION
+  // --------------------------------------
+
+  function calculateDayDeficit(
+    dayStart,
+    dayEnd,
+    isToday = false
+  ) {
+
+    const weightForDay =
+      getHistoricalWeight(
+        dayEnd
+      );
+
+
+    const dayBMR =
+      calculateBMR(
+        weightForDay
+      );
+
+
+    const dayExpenditure =
+      dayBMR *
+      ACTIVITY_MULTIPLIER;
+
+
+    let baselineBurn =
+      dayExpenditure;
+
+
+    if (isToday) {
+
+      baselineBurn =
+        dayExpenditure *
+        (
+          (
+            now -
+            dayStart
+          ) /
+          (
+            24 *
+            60 *
+            60 *
+            1000
+          )
         );
 
     }
-  );
-
-    let baselineForDay =
-  dailyExpenditure;
 
 
-// Today is only a partial day,
-// so count expenditure up to the current time
+    const foodForDay =
+      (foodData || [])
+        .filter(entry => {
 
-if (
-  dayStart.getTime() ===
-  chartEndDate.getTime()
-) {
-
-  baselineForDay =
-    expenditureForDay *
-    dayFraction;
-
-}
-
-const deficitForDay =
-  baselineForDay +
-  extraActivityForDay -
-  foodForDay;
+          const date =
+            new Date(
+              entry.eaten_at
+            );
 
 
-deficitValues.push(
-  Math.round(
-    deficitForDay
-  )
-);
+          return (
+            date >= dayStart &&
+            date < dayEnd
+          );
 
-  deficitLabels.push(
-    dayStart.toLocaleDateString(
-      "en-GB",
-      {
-        day: "2-digit",
-        month: "short"
-      }
-    )
+        })
+        .reduce(
+          (total, entry) =>
+            total +
+            Number(
+              entry.calories
+            ),
+          0
+        );
+
+
+    let extraActivity =
+      0;
+
+
+    (activityData || [])
+      .filter(entry => {
+
+        const date =
+          new Date(
+            entry.performed_at
+          );
+
+
+        return (
+          date >= dayStart &&
+          date < dayEnd
+        );
+
+      })
+      .forEach(entry => {
+
+        const grossBurn =
+          Number(
+            entry.calories_burned
+          ) || 0;
+
+
+        const minutes =
+          Number(
+            entry.duration_minutes
+          ) || 0;
+
+
+        const baselineForActivity =
+          (
+            dayExpenditure /
+            1440
+          ) *
+          minutes;
+
+
+        extraActivity +=
+          Math.max(
+            0,
+            grossBurn -
+            baselineForActivity
+          );
+
+      });
+
+
+    return (
+      baselineBurn +
+      extraActivity -
+      foodForDay
     );
 
-}
+  }
 
 
-// Draw the deficit graph
+  // --------------------------------------
+  // BUILD DAILY DEFICIT DATA
+  // --------------------------------------
 
-drawDeficitChart(
-  deficitLabels,
-  deficitValues
-);
+  const dailyDeficits =
+    [];
 
-}
 
-summaryDeficitToday.textContent =
-  Math.round(deficitToday) +
-  " kcal";
+  let cursor =
+    new Date(
+      trackingStart
+    );
 
-  summaryDeficit7Days.textContent =
-  Math.round(deficit7Days) +
-  " kcal";
 
-  summaryDeficit30Days.textContent =
-  Math.round(deficit30Days) +
-  " kcal";
-
- if (weightEquivalentKg >= 0) {
-
-  estimatedWeightEquivalent.textContent =
-    weightEquivalentKg.toFixed(2) +
-    " kg loss";
-
-} else {
-
-  estimatedWeightEquivalent.textContent =
-    Math.abs(
-      weightEquivalentKg
-    ).toFixed(2) +
-    " kg gain";
-
-}
-  
-const displayDays7 =
-  Math.min(
-    7,
-    trackedDays7
+  cursor.setHours(
+    0,
+    0,
+    0,
+    0
   );
 
-const displayDays30 =
-  Math.min(30, trackedDays30);
 
-weightEquivalentLabel.textContent =
-  "Weight Equivalent — " +
-  displayDays30.toFixed(1) +
-  " days tracked";
+  while (
+    cursor <= now
+  ) {
 
-
-summary7DaysLabel.textContent =
-  displayDays7 < 7
-    ? "Deficit — " +
-      displayDays7.toFixed(1) +
-      " days tracked"
-    : "Deficit — Last 7 Days";
+    const dayStart =
+      new Date(
+        cursor
+      );
 
 
-summary30DaysLabel.textContent =
-  displayDays30 < 30
-    ? "Deficit — " +
-      displayDays30.toFixed(1) +
-      " days tracked"
-    : "Deficit — Last 30 Days";
+    const nextDay =
+      new Date(
+        dayStart
+      );
+
+    nextDay.setDate(
+      nextDay.getDate() + 1
+    );
+
+
+    const isToday =
+      dayStart.toDateString() ===
+      now.toDateString();
+
+
+    const dayEnd =
+      isToday
+        ? now
+        : nextDay;
+
+
+    const deficit =
+      calculateDayDeficit(
+        dayStart,
+        dayEnd,
+        isToday
+      );
+
+
+    dailyDeficits.push({
+      date: dayStart,
+      deficit: deficit
+    });
+
+
+    cursor =
+      nextDay;
+
+  }
+
+
+  // --------------------------------------
+  // LAST 7 DAYS
+  // --------------------------------------
+
+  const last7 =
+    dailyDeficits.slice(
+      -7
+    );
+
+
+  const deficit7Days =
+    last7.reduce(
+      (total, day) =>
+        total +
+        day.deficit,
+      0
+    );
+
+
+  // --------------------------------------
+  // LAST 30 DAYS
+  // --------------------------------------
+
+  const last30 =
+    dailyDeficits.slice(
+      -30
+    );
+
+
+  const deficit30Days =
+    last30.reduce(
+      (total, day) =>
+        total +
+        day.deficit,
+      0
+    );
+
+
+  summaryDeficit7Days.textContent =
+    Math.round(
+      deficit7Days
+    ) +
+    " kcal";
+
+
+  summaryDeficit30Days.textContent =
+    Math.round(
+      deficit30Days
+    ) +
+    " kcal";
+
+
+  // --------------------------------------
+  // WEIGHT EQUIVALENT
+  // --------------------------------------
+
+  const weightEquivalent =
+    deficit30Days /
+    7700;
+
+
+  estimatedWeightEquivalent.textContent =
+    weightEquivalent.toFixed(2) +
+    " kg";
+
+
+  // --------------------------------------
+  // DAYS TRACKED LABELS
+  // --------------------------------------
+
+  const trackedDays7 =
+    last7.length;
+
+
+  const trackedDays30 =
+    last30.length;
+
+
+  const displayDays7 =
+    Math.min(
+      7,
+      trackedDays7
+    );
+
+
+  const displayDays30 =
+    Math.min(
+      30,
+      trackedDays30
+    );
+
+
+  weightEquivalentLabel.textContent =
+    "Weight Equivalent — " +
+    displayDays30 +
+    " days tracked";
+
+
+  summary7DaysLabel.textContent =
+    displayDays7 < 7
+      ? "Deficit — " +
+        displayDays7 +
+        " days tracked"
+      : "Deficit — Last 7 Days";
+
+
+  summary30DaysLabel.textContent =
+    displayDays30 < 30
+      ? "Deficit — " +
+        displayDays30 +
+        " days tracked"
+      : "Deficit — Last 30 Days";
+
+
+  // --------------------------------------
+  // DEFICIT CHART
+  // --------------------------------------
+
+  const chartDays =
+    last30;
+
+
+  const chartLabels =
+    chartDays.map(day =>
+
+      day.date.toLocaleDateString(
+        "en-GB",
+        {
+          day: "2-digit",
+          month: "short"
+        }
+      )
+
+    );
+
+
+  const chartValues =
+    chartDays.map(day =>
+
+      Math.round(
+        day.deficit
+      )
+
+    );
+
+
+  drawDeficitChart(
+    chartLabels,
+    chartValues
+  );
+
 }
+
+
+// ========================================
+// DEFICIT CHART
+// ========================================
 
 function drawDeficitChart(
   labels,
@@ -3684,7 +3641,9 @@ function drawDeficitChart(
 
 
   if (!canvas) {
+
     return;
+
   }
 
 
@@ -3702,6 +3661,7 @@ function drawDeficitChart(
         type: "line",
 
         data: {
+
           labels: labels,
 
           datasets: [
@@ -3709,31 +3669,41 @@ function drawDeficitChart(
               label:
                 "Daily Deficit (kcal)",
 
-              data: values,
+              data:
+                values,
 
-              tension: 0.3
+              tension:
+                0.3
             }
           ]
+
         },
 
         options: {
-          responsive: true,
+
+          responsive:
+            true,
 
           scales: {
+
             y: {
-              beginAtZero: false
-              }
+              beginAtZero:
+                false
             }
+
           }
+
         }
-      );
-  
-  }
+
+      }
+    );
+
+}
+
 
 // ========================================
 // CALORIE INTAKE CHART
 // ========================================
-
 
 function drawCalorieChart(
   labels,
@@ -3748,7 +3718,9 @@ function drawCalorieChart(
 
 
   if (!canvas) {
+
     return;
+
   }
 
 
@@ -3766,48 +3738,69 @@ function drawCalorieChart(
         type: "bar",
 
         data: {
-          labels: labels,
+
+          labels:
+            labels,
 
           datasets: [
-  {
-    label:
-      "Calories Eaten",
 
-    data: values
-  },
+            {
+              label:
+                "Calories Eaten",
 
-  {
-    label:
-      "Daily Expenditure",
+              data:
+                values
+            },
 
-    data:
-      labels.map(
-        () =>
-          dailyExpenditure
-      ),
+            {
+              label:
+                "Daily Expenditure",
 
-    type: "line",
+              data:
+                labels.map(
+                  () =>
+                    dailyExpenditure
+                ),
 
-    tension: 0,
+              type:
+                "line",
 
-    pointRadius: 0
-  }
-]
+              tension:
+                0,
+
+              pointRadius:
+                0
+            }
+
+          ]
+
         },
 
         options: {
-          responsive: true,
+
+          responsive:
+            true,
 
           scales: {
+
             y: {
-              beginAtZero: true
+              beginAtZero:
+                true
             }
+
           }
+
         }
+
       }
     );
 
 }
+
+
+// ========================================
+// ACTIVITY CHART
+// ========================================
 
 function drawActivityChart(
   labels,
@@ -3819,13 +3812,20 @@ function drawActivityChart(
       "activityChart"
     );
 
+
   if (!canvas) {
+
     return;
+
   }
 
+
   if (activityChartInstance) {
+
     activityChartInstance.destroy();
+
   }
+
 
   activityChartInstance =
     new Chart(
@@ -3834,56 +3834,158 @@ function drawActivityChart(
         type: "bar",
 
         data: {
-          labels: labels,
+
+          labels:
+            labels,
 
           datasets: [
             {
               label:
                 "Activity Calories",
 
-              data: values
+              data:
+                values
             }
           ]
+
         },
 
         options: {
-          responsive: true,
+
+          responsive:
+            true,
 
           scales: {
+
             y: {
-              beginAtZero: true
+              beginAtZero:
+                true
             }
+
           }
+
         }
+
       }
     );
 
 }
 
+// ========================================
+// LOGIN / LOGOUT
+// ========================================
+
 const mainApp =
   document.querySelector(".app");
 
 const loginScreen =
-  document.getElementById("loginScreen");
+  document.getElementById(
+    "loginScreen"
+  );
 
 const loginEmail =
-  document.getElementById("loginEmail");
+  document.getElementById(
+    "loginEmail"
+  );
 
 const loginPassword =
-  document.getElementById("loginPassword");
+  document.getElementById(
+    "loginPassword"
+  );
 
 const loginBtn =
-  document.getElementById("loginBtn");
+  document.getElementById(
+    "loginBtn"
+  );
 
 const loginMessage =
-  document.getElementById("loginMessage");
+  document.getElementById(
+    "loginMessage"
+  );
+
+const logoutBtn =
+  document.getElementById(
+    "logoutBtn"
+  );
+
+
+// ----------------------------------------
+// LOAD APP AFTER LOGIN
+// ----------------------------------------
+
+async function loadAuthenticatedApp() {
+
+  loginScreen.style.display =
+    "none";
+
+  mainApp.style.display =
+    "";
+
+
+  await loadActiveFast();
+
+  await loadFastingHistory();
+
+  await loadWeights();
+
+  await loadCalories();
+
+  await loadActivities();
+
+  await loadFastingSummary();
+
+  await updateTodayDeficit();
+
+}
+
+
+// ----------------------------------------
+// CHECK EXISTING LOGIN
+// ----------------------------------------
+
+async function checkLogin() {
+
+  const {
+    data: { session },
+    error
+  } =
+    await db.auth.getSession();
+
+
+  if (error) {
+
+    console.error(
+      "Unable to check login:",
+      error
+    );
+
+  }
+
+
+  if (session) {
+
+    await loadAuthenticatedApp();
+
+  } else {
+
+    loginScreen.style.display =
+      "block";
+
+    mainApp.style.display =
+      "none";
+
+  }
+
+}
+
+
+// ----------------------------------------
+// LOGIN
+// ----------------------------------------
 
 loginBtn.addEventListener(
   "click",
   async () => {
-
-    loginMessage.textContent =
-      "Logging in...";
 
     const email =
       loginEmail.value.trim();
@@ -3892,20 +3994,35 @@ loginBtn.addEventListener(
       loginPassword.value;
 
 
-    if (!email || !password) {
+    if (
+      !email ||
+      !password
+    ) {
 
       loginMessage.textContent =
         "Please enter your email and password.";
 
       return;
+
     }
 
 
-    const { error } =
-      await db.auth.signInWithPassword({
-        email: email,
-        password: password
-      });
+    loginBtn.disabled =
+      true;
+
+    loginMessage.textContent =
+      "Logging in...";
+
+
+    const {
+      data,
+      error
+    } =
+      await db.auth
+        .signInWithPassword({
+          email: email,
+          password: password
+        });
 
 
     if (error) {
@@ -3918,88 +4035,122 @@ loginBtn.addEventListener(
       loginMessage.textContent =
         "Unable to log in. Check your email and password.";
 
+      loginBtn.disabled =
+        false;
+
       return;
+
     }
 
 
-    loginMessage.textContent = "";
+    if (!data.session) {
+
+      loginMessage.textContent =
+        "Unable to log in.";
+
+      loginBtn.disabled =
+        false;
+
+      return;
+
+    }
+
+
+    loginMessage.textContent =
+      "";
+
+    loginBtn.disabled =
+      false;
+
+
+    await loadAuthenticatedApp();
 
   }
 );
 
-async function checkLogin() {
 
-  const {
-    data: { session }
-  } =
-    await db.auth.getSession();
+// ----------------------------------------
+// PRESS ENTER TO LOGIN
+// ----------------------------------------
 
-  if (session) {
+loginPassword.addEventListener(
+  "keydown",
+  event => {
 
-    loginScreen.style.display = "none";
-    mainApp.style.display = "";
+    if (
+      event.key === "Enter"
+    ) {
 
-    await loadActiveFast();
-    await loadFastingHistory();
-    await loadWeights();
-    await loadCalories();
-    await loadActivities();
-    await loadFastingSummary();
-    await updateTodayDeficit();
-
-  } else {
-
-    loginScreen.style.display = "block";
-    mainApp.style.display = "none";
-
-  }
-
-}
-
-
-db.auth.onAuthStateChange(
-  async (event, session) => {
-
-    if (session) {
-
-      loginScreen.style.display = "none";
-      mainApp.style.display = "";
-
-      await loadActiveFast();
-      await loadFastingHistory();
-      await loadWeights();
-      await loadCalories();
-      await loadActivities();
-      await loadFastingSummary();
-      await updateTodayDeficit();
-
-    } else {
-
-      loginScreen.style.display = "block";
-      mainApp.style.display = "none";
+      loginBtn.click();
 
     }
 
   }
 );
-const logoutBtn =
-  document.getElementById("logoutBtn");
+
+
+// ----------------------------------------
+// LOGOUT
+// ----------------------------------------
 
 logoutBtn.addEventListener(
   "click",
   async () => {
 
-    await db.auth.signOut();
+    const { error } =
+      await db.auth.signOut();
 
-    loginEmail.value = "";
-    loginPassword.value = "";
-    loginMessage.textContent = "";
+
+    if (error) {
+
+      console.error(
+        "Logout error:",
+        error
+      );
+
+      return;
+
+    }
+
+
+    if (timerInterval) {
+
+      clearInterval(
+        timerInterval
+      );
+
+      timerInterval =
+        null;
+
+    }
+
+
+    activeFast =
+      null;
+
+
+    loginEmail.value =
+      "";
+
+    loginPassword.value =
+      "";
+
+    loginMessage.textContent =
+      "";
+
 
     loginScreen.style.display =
       "block";
 
     mainApp.style.display =
-  "none";
+      "none";
 
   }
 );
+
+
+// ========================================
+// START APP
+// ========================================
+
+checkLogin();
