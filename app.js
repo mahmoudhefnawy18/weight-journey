@@ -2130,12 +2130,14 @@ async function getLatestWeight() {
       .maybeSingle();
 
 
-  if (error) {
+console.error(
+  "Unable to get latest weight:",
+  error
+);
 
-    console.error(
-      "Unable to get latest weight:",
-      error
-    );
+console.trace(
+  "getLatestWeight was called from"
+);
 
     return STARTING_WEIGHT;
   }
