@@ -3882,54 +3882,27 @@ async function checkLogin() {
   } =
     await db.auth.getSession();
 
-if (session) {
-  loginScreen.style.display = "none";
-  mainApp.style.display = "";
-} else {
-  loginScreen.style.display = "block";
-  mainApp.style.display = "none";
-}
+  if (session) {
 
-}
+    loginScreen.style.display = "none";
+    mainApp.style.display = "";
 
+    await loadActiveFast();
+    await loadFastingHistory();
+    await loadWeights();
+    await loadCalories();
+    await loadActivities();
+    await loadFastingSummary();
+    await updateTodayDeficit();
 
-loginBtn.addEventListener(
-  "click",
-  async () => {
+  } else {
 
-    loginMessage.textContent =
-      "Logging in...";
-
-    const { error } =
-      await db.auth.signInWithPassword({
-        email: loginEmail.value.trim(),
-        password: loginPassword.value
-      });
-
-    if (error) {
-      loginMessage.textContent =
-        "Incorrect email or password.";
-      return;
-    }
-
-    loginMessage.textContent = "";
-
-loginScreen.style.display =
-  "none";
-
-mainApp.style.display =
-  "";
-
-loadActiveFast();
-loadFastingHistory();
-loadWeights();
-loadCalories();
-loadActivities();
-loadFastingSummary();
-updateTodayDeficit();
+    loginScreen.style.display = "block";
+    mainApp.style.display = "none";
 
   }
-);
+
+}
 
 
 checkLogin();
