@@ -2130,14 +2130,16 @@ async function getLatestWeight() {
       .maybeSingle();
 
 
-console.error(
-  "Unable to get latest weight:",
-  error
-);
+  if (error) {
 
-console.trace(
-  "getLatestWeight was called from"
-);
+    console.error(
+      "Unable to get latest weight:",
+      error
+    );
+
+    console.trace(
+      "getLatestWeight was called from"
+    );
 
     return STARTING_WEIGHT;
   }
@@ -2153,17 +2155,16 @@ console.trace(
   );
 
 }
-
-
-function calculateActivityCalories(
-  met,
-  weightKg,
-  minutes
-) {
-
-  const calories =
-    (
-      met *
+  
+  function calculateActivityCalories(
+    met,
+    weightKg,
+    minutes
+  ) {
+  
+    const calories =
+      (
+        met *
       3.5 *
       weightKg /
       200
