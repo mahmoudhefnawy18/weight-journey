@@ -2138,7 +2138,10 @@ async function getLatestWeight() {
     );
 
     console.trace(
-      "getLatestWeight was called from"
+    console.error(
+  "CALL STACK:",
+  new Error().stack
+);
     );
 
     return STARTING_WEIGHT;
