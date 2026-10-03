@@ -3905,8 +3905,31 @@ async function checkLogin() {
 }
 
 
-checkLogin();
+db.auth.onAuthStateChange(
+  async (event, session) => {
 
+    if (session) {
+
+      loginScreen.style.display = "none";
+      mainApp.style.display = "";
+
+      await loadActiveFast();
+      await loadFastingHistory();
+      await loadWeights();
+      await loadCalories();
+      await loadActivities();
+      await loadFastingSummary();
+      await updateTodayDeficit();
+
+    } else {
+
+      loginScreen.style.display = "block";
+      mainApp.style.display = "none";
+
+    }
+
+  }
+);
 const logoutBtn =
   document.getElementById("logoutBtn");
 
