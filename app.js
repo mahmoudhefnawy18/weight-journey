@@ -3878,6 +3878,54 @@ const loginBtn =
 const loginMessage =
   document.getElementById("loginMessage");
 
+loginBtn.addEventListener(
+  "click",
+  async () => {
+
+    loginMessage.textContent =
+      "Logging in...";
+
+    const email =
+      loginEmail.value.trim();
+
+    const password =
+      loginPassword.value;
+
+
+    if (!email || !password) {
+
+      loginMessage.textContent =
+        "Please enter your email and password.";
+
+      return;
+    }
+
+
+    const { error } =
+      await db.auth.signInWithPassword({
+        email: email,
+        password: password
+      });
+
+
+    if (error) {
+
+      console.error(
+        "Login error:",
+        error
+      );
+
+      loginMessage.textContent =
+        "Unable to log in. Check your email and password.";
+
+      return;
+    }
+
+
+    loginMessage.textContent = "";
+
+  }
+);
 
 async function checkLogin() {
 
