@@ -1,0 +1,18 @@
+{
+  "name": "Weight Journey",
+  "short_name": "Weight",
+  "description": "My personal weight, fasting, calorie and activity tracker",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0ea5a8",
+  "icons": [
+    {
+      "src": "Mahmoud.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
