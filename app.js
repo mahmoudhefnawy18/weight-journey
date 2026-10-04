@@ -1,119 +1,348 @@
-const SUPABASE_URL =
-  "https://epdinlgqlxfezrjjyhmk.supabase.co";
+const SUPABASE_URL = "https://epdinlgqlxfezrjjyhmk.supabase.co";
+const SUPABASE_KEY = "sb_publishable_xtEL7D8kZQiPiPMuXj-5ww_ibXNJhbr";
 
-const SUPABASE_KEY =
-  "sb_publishable_xtEL7D8kZQiPiPMuXj-5ww_ibXNJhbr";
+const db = supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
 
+const STARTING_WEIGHT = 167;
+const HEIGHT_CM = 180;
+const GOAL_WEIGHT = 80;
+const AGE = 38;
+const ACTIVITY_MULTIPLIER = 1.3;
+const KCAL_PER_KG = 7700;
 
-const db =
-  supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_KEY
-  );
+const $ = id =>
+  document.getElementById(id);
 
 const tabs =
-  document.querySelectorAll(".tab");
+  [...document.querySelectorAll(".tab")];
 
 const tabContents =
-  document.querySelectorAll(".tab-content");
+  [...document.querySelectorAll(".tab-content")];
+
+let activeFast = null;
+let timerInterval = null;
+
+let weightChartInstance = null;
+let calorieChartInstance = null;
+let activityChartInstance = null;
+let deficitChartInstance = null;
+
+let selectedFood = null;
+let selectedActivity = null;
+
+let foodMode = "search";
+
+
+// ========================================
+// DATE / TIME
+// ========================================
+
+function localDateTimeValue(
+  date = new Date()
+) {
+
+  const local =
+    new Date(
+      date.getTime() -
+      date.getTimezoneOffset() * 60000
+    );
+
+  return local
+    .toISOString()
+    .slice(0, 16);
+}
+
+
+function setDefaultDates() {
+
+  if ($("weightDate")) {
+    $("weightDate").value =
+      localDateTimeValue();
+  }
+
+  if ($("foodDate")) {
+    $("foodDate").value =
+      localDateTimeValue();
+  }
+
+  if ($("activityDate")) {
+    $("activityDate").value =
+      localDateTimeValue();
+  }
+
+}
+
+
+// ========================================
+// TABS
+// ========================================
+
+function activateTab(name) {
+
+  tabs.forEach(tab => {
+
+    tab.classList.toggle(
+      "active",
+      tab.dataset.tab === name
+    );
+
+  });
+
+
+  tabContents.forEach(section => {
+
+    section.classList.toggle(
+      "active",
+      section.id === name
+    );
+
+  });
+
+
+  const selectedTab =
+    tabs.find(
+      tab =>
+        tab.dataset.tab === name
+    );
+
+
+  if (selectedTab) {
+
+    selectedTab.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+      inline: "center"
+    });
+
+  }
+
+}
 
 
 tabs.forEach(tab => {
 
-  tab.addEventListener("click", () => {
+  tab.addEventListener(
+    "click",
+    () => {
 
-    const selectedTab =
-      tab.dataset.tab;
+      activateTab(
+        tab.dataset.tab
+      );
 
-    tabs.forEach(item => {
-      item.classList.remove("active");
-    });
-
-    tabContents.forEach(section => {
-      section.classList.remove("active");
-    });
-
-    tab.classList.add("active");
-
-    document
-      .getElementById(selectedTab)
-      .classList.add("active");
-
-  });
+    }
+  );
 
 });
+
+
+// ========================================
+// SWIPE BETWEEN TABS
+// ========================================
+
+let touchStartX = 0;
+let touchStartY = 0;
+let touchTarget = null;
+
+
+document.addEventListener(
+  "touchstart",
+  event => {
+
+    if (!event.touches.length) {
+      return;
+    }
+
+    touchStartX =
+      event.touches[0].clientX;
+
+    touchStartY =
+      event.touches[0].clientY;
+
+    touchTarget =
+      event.target;
+
+  },
+  {
+    passive: true
+  }
+);
+
+
+document.addEventListener(
+  "touchend",
+  event => {
+
+    if (
+      !event.changedTouches.length ||
+      !touchTarget
+    ) {
+      return;
+    }
+
+
+    if (
+      touchTarget.closest(
+        "input, select, textarea, button, .suggestions, canvas"
+      )
+    ) {
+      return;
+    }
+
+
+    const endX =
+      event.changedTouches[0].clientX;
+
+    const endY =
+      event.changedTouches[0].clientY;
+
+
+    const dx =
+      endX - touchStartX;
+
+    const dy =
+      endY - touchStartY;
+
+
+    if (
+      Math.abs(dx) < 60 ||
+      Math.abs(dx) <=
+        Math.abs(dy) * 1.2
+    ) {
+      return;
+    }
+
+
+    const currentIndex =
+      tabs.findIndex(
+        tab =>
+          tab.classList.contains(
+            "active"
+          )
+      );
+
+
+    const nextIndex =
+      dx < 0
+        ? currentIndex + 1
+        : currentIndex - 1;
+
+
+    if (
+      nextIndex >= 0 &&
+      nextIndex < tabs.length
+    ) {
+
+      activateTab(
+        tabs[nextIndex].dataset.tab
+      );
+
+    }
+
+  },
+  {
+    passive: true
+  }
+);
 
 
 // ========================================
 // FASTING
 // ========================================
 
-const fastTimer =
-  document.getElementById("fastTimer");
+function formatFastDuration(
+  startTime
+) {
 
-const fastStatus =
-  document.getElementById("fastStatus");
-
-const startFastBtn =
-  document.getElementById("startFastBtn");
-
-const stopFastBtn =
-  document.getElementById("stopFastBtn");
-
-const summaryCurrentFast =
-  document.getElementById(
-    "summaryCurrentFast"
-  );
-
-
-let activeFast = null;
-
-let timerInterval = null;
-
-
-// ----------------------------------------
-// FORMAT FASTING TIME
-// ----------------------------------------
-
-function formatFastDuration(startTime) {
-
-  const start =
-    new Date(startTime);
-
-  const now =
-    new Date();
-
-  const totalSeconds =
-    Math.floor(
-      (now - start) / 1000
+  const seconds =
+    Math.max(
+      0,
+      Math.floor(
+        (
+          Date.now() -
+          new Date(
+            startTime
+          ).getTime()
+        ) / 1000
+      )
     );
+
 
   const hours =
     Math.floor(
-      totalSeconds / 3600
+      seconds / 3600
     );
+
 
   const minutes =
     Math.floor(
-      (totalSeconds % 3600) / 60
+      (
+        seconds % 3600
+      ) / 60
     );
 
-  const seconds =
-    totalSeconds % 60;
+
+  const remainingSeconds =
+    seconds % 60;
+
 
   return (
-    String(hours).padStart(2, "0") +
+    String(hours).padStart(
+      2,
+      "0"
+    ) +
     ":" +
-    String(minutes).padStart(2, "0") +
+    String(minutes).padStart(
+      2,
+      "0"
+    ) +
     ":" +
-    String(seconds).padStart(2, "0")
+    String(
+      remainingSeconds
+    ).padStart(
+      2,
+      "0"
+    )
+  );
+
+}
+
+
+function formatMinutes(
+  minutes
+) {
+
+  const totalMinutes =
+    Math.max(
+      0,
+      Math.round(minutes)
+    );
+
+
+  const hours =
+    Math.floor(
+      totalMinutes / 60
+    );
+
+
+  const mins =
+    totalMinutes % 60;
+
+
+  return (
+    hours +
+    "h " +
+    mins +
+    "m"
   );
 
 }
 
 
 // ----------------------------------------
-// UPDATE TIMER
+// LIVE FAST TIMER
 // ----------------------------------------
 
 function updateFastTimer() {
@@ -122,15 +351,18 @@ function updateFastTimer() {
     return;
   }
 
+
   const duration =
     formatFastDuration(
       activeFast.started_at
     );
 
-  fastTimer.textContent =
+
+  $("fastTimer").textContent =
     duration;
 
-  summaryCurrentFast.textContent =
+
+  $("summaryCurrentFast").textContent =
     duration;
 
 }
@@ -142,16 +374,20 @@ function updateFastTimer() {
 
 function showActiveFast() {
 
-  fastStatus.textContent =
+  $("fastStatus").textContent =
     "Fasting";
 
-  startFastBtn.hidden =
+
+  $("startFastBtn").hidden =
     true;
 
-  stopFastBtn.hidden =
+
+  $("stopFastBtn").hidden =
     false;
 
+
   updateFastTimer();
+
 
   if (timerInterval) {
 
@@ -160,6 +396,7 @@ function showActiveFast() {
     );
 
   }
+
 
   timerInterval =
     setInterval(
@@ -176,23 +413,42 @@ function showActiveFast() {
 
 async function startFast() {
 
-  startFastBtn.disabled =
+  const button =
+    $("startFastBtn");
+
+
+  button.disabled =
     true;
 
-  startFastBtn.textContent =
+
+  button.textContent =
     "Starting...";
 
-  const now =
-    new Date().toISOString();
 
-  const { data, error } =
+  const {
+    data,
+    error
+  } =
     await db
-      .from("fasting_sessions")
+      .from(
+        "fasting_sessions"
+      )
       .insert({
-        started_at: now
+        started_at:
+          new Date()
+            .toISOString()
       })
       .select()
       .single();
+
+
+  button.disabled =
+    false;
+
+
+  button.textContent =
+    "▶ Start Fast";
+
 
   if (error) {
 
@@ -202,23 +458,14 @@ async function startFast() {
       "Unable to start fast."
     );
 
-    startFastBtn.disabled =
-      false;
-
-    startFastBtn.textContent =
-      "Start Fast";
-
     return;
+
   }
+
 
   activeFast =
     data;
 
-  startFastBtn.disabled =
-    false;
-
-  startFastBtn.textContent =
-    "Start Fast";
 
   showActiveFast();
 
@@ -235,34 +482,55 @@ async function stopFast() {
     return;
   }
 
+
   const confirmed =
     confirm(
       "Are you sure you want to stop your fast?"
     );
 
+
   if (!confirmed) {
     return;
   }
 
-  stopFastBtn.disabled =
+
+  const button =
+    $("stopFastBtn");
+
+
+  button.disabled =
     true;
 
-  stopFastBtn.textContent =
+
+  button.textContent =
     "Stopping...";
 
-  const endTime =
-    new Date().toISOString();
 
-  const { error } =
+  const {
+    error
+  } =
     await db
-      .from("fasting_sessions")
+      .from(
+        "fasting_sessions"
+      )
       .update({
-        ended_at: endTime
+        ended_at:
+          new Date()
+            .toISOString()
       })
       .eq(
         "id",
         activeFast.id
       );
+
+
+  button.disabled =
+    false;
+
+
+  button.textContent =
+    "■ Stop Fast";
+
 
   if (error) {
 
@@ -272,14 +540,10 @@ async function stopFast() {
       "Unable to stop fast."
     );
 
-    stopFastBtn.disabled =
-      false;
-
-    stopFastBtn.textContent =
-      "Stop Fast";
-
     return;
+
   }
+
 
   if (timerInterval) {
 
@@ -292,57 +556,50 @@ async function stopFast() {
 
   }
 
+
   activeFast =
     null;
 
-  fastTimer.textContent =
+
+  $("fastTimer").textContent =
     "00:00:00";
 
-  fastStatus.textContent =
+
+  $("fastStatus").textContent =
     "Not fasting";
 
-  stopFastBtn.hidden =
+
+  $("summaryCurrentFast").textContent =
+    "Not fasting";
+
+
+  button.hidden =
     true;
 
-  stopFastBtn.disabled =
+
+  $("startFastBtn").hidden =
     false;
 
-  stopFastBtn.textContent =
-    "Stop Fast";
-
-  startFastBtn.hidden =
-    false;
 
   await loadFastingHistory();
-  await loadFastingSummary();
 
 }
 
 
 // ----------------------------------------
-// FASTING BUTTONS
-// ----------------------------------------
-
-startFastBtn.addEventListener(
-  "click",
-  startFast
-);
-
-stopFastBtn.addEventListener(
-  "click",
-  stopFast
-);
-
-
-// ----------------------------------------
-// LOAD ACTIVE FAST
+// LOAD CURRENT FAST
 // ----------------------------------------
 
 async function loadActiveFast() {
 
-  const { data, error } =
+  const {
+    data,
+    error
+  } =
     await db
-      .from("fasting_sessions")
+      .from(
+        "fasting_sessions"
+      )
       .select("*")
       .is(
         "ended_at",
@@ -357,6 +614,7 @@ async function loadActiveFast() {
       .limit(1)
       .maybeSingle();
 
+
   if (error) {
 
     console.error(
@@ -365,68 +623,58 @@ async function loadActiveFast() {
     );
 
     return;
+
   }
 
-  if (!data) {
-
-    activeFast =
-      null;
-
-    fastTimer.textContent =
-      "00:00:00";
-
-    fastStatus.textContent =
-      "Not fasting";
-
-    summaryCurrentFast.textContent =
-      "Not fasting";
-
-    startFastBtn.hidden =
-      false;
-
-    stopFastBtn.hidden =
-      true;
-
-    return;
-  }
 
   activeFast =
-    data;
+    data || null;
 
-  showActiveFast();
+
+  if (activeFast) {
+
+    showActiveFast();
+
+  } else {
+
+    $("fastTimer").textContent =
+      "00:00:00";
+
+
+    $("fastStatus").textContent =
+      "Not fasting";
+
+
+    $("summaryCurrentFast").textContent =
+      "Not fasting";
+
+
+    $("startFastBtn").hidden =
+      false;
+
+
+    $("stopFastBtn").hidden =
+      true;
+
+  }
 
 }
 
 
-// ========================================
-// FASTING HISTORY
-// ========================================
+// ----------------------------------------
+// FASTING HISTORY + SUMMARY
+// ----------------------------------------
 
 async function loadFastingHistory() {
 
-  const historyArea =
-    document.getElementById(
-      "fastingHistory"
-    );
-
-  const lastFast =
-    document.getElementById(
-      "lastFast"
-    );
-
-  const averageFast =
-    document.getElementById(
-      "averageFast"
-    );
-
-  const longestFast =
-    document.getElementById(
-      "longestFast"
-    );
-
-  const { data, error } =
+  const {
+    data,
+    error
+  } =
     await db
-      .from("fasting_sessions")
+      .from(
+        "fasting_sessions"
+      )
       .select("*")
       .not(
         "ended_at",
@@ -440,6 +688,7 @@ async function loadFastingHistory() {
         }
       );
 
+
   if (error) {
 
     console.error(
@@ -447,199 +696,171 @@ async function loadFastingHistory() {
       error
     );
 
-    historyArea.innerHTML =
-      "<p>Unable to load fasting history.</p>";
-
     return;
+
   }
 
-  if (
-    !data ||
-    data.length === 0
-  ) {
-
-    historyArea.innerHTML =
-      "<p>No completed fasts yet.</p>";
-
-    lastFast.textContent =
-      "—";
-
-    averageFast.textContent =
-      "—";
-
-    longestFast.textContent =
-      "—";
-
-    return;
-  }
 
   const sessions =
-    data.map(session => {
+    (data || [])
+      .map(
+        session => {
 
-      const start =
-        new Date(
-          session.started_at
-        );
-
-      const end =
-        new Date(
-          session.ended_at
-        );
-
-      const durationMinutes =
-        Math.round(
-          (end - start) /
-          60000
-        );
-
-      return {
-        ...session,
-        start,
-        end,
-        durationMinutes
-      };
-
-    });
+          const start =
+            new Date(
+              session.started_at
+            );
 
 
-  function formatMinutes(minutes) {
+          const end =
+            new Date(
+              session.ended_at
+            );
 
-    const hours =
-      Math.floor(
-        minutes / 60
+
+          return {
+            ...session,
+            start,
+            end,
+            minutes:
+              Math.round(
+                (
+                  end -
+                  start
+                ) /
+                60000
+              )
+          };
+
+        }
       );
 
-    const mins =
-      minutes % 60;
 
-    return (
-      hours +
-      "h " +
-      mins +
-      "m"
-    );
-
-  }
+  $("lastFast").textContent =
+    sessions.length
+      ? formatMinutes(
+          sessions[0].minutes
+        )
+      : "—";
 
 
-  lastFast.textContent =
-    formatMinutes(
-      sessions[0]
-        .durationMinutes
-    );
+  $("averageFast").textContent =
+    sessions.length
+      ? formatMinutes(
+          sessions.reduce(
+            (
+              total,
+              session
+            ) =>
+              total +
+              session.minutes,
+            0
+          ) /
+          sessions.length
+        )
+      : "—";
 
-  const totalMinutes =
-    sessions.reduce(
-      (total, session) =>
-        total +
-        session.durationMinutes,
-      0
-    );
 
-  const averageMinutes =
-    Math.round(
-      totalMinutes /
-      sessions.length
-    );
+  $("longestFast").textContent =
+    sessions.length
+      ? formatMinutes(
+          Math.max(
+            ...sessions.map(
+              session =>
+                session.minutes
+            )
+          )
+        )
+      : "—";
 
-  averageFast.textContent =
-    formatMinutes(
-      averageMinutes
-    );
 
-  const longestMinutes =
-    Math.max(
-      ...sessions.map(
-        session =>
-          session.durationMinutes
-      )
-    );
+  const area =
+    $("fastingHistory");
 
-  longestFast.textContent =
-    formatMinutes(
-      longestMinutes
-    );
 
-  historyArea.innerHTML =
-    "";
+  area.innerHTML =
+    sessions.length
+      ? ""
+      : "<p>No completed fasts yet.</p>";
 
-  sessions.forEach(session => {
 
-    const card =
-      document.createElement(
-        "div"
+  sessions.forEach(
+    session => {
+
+      const card =
+        document.createElement(
+          "div"
+        );
+
+
+      card.className =
+        "history-card";
+
+
+      card.innerHTML =
+        `
+        <div>
+          <strong>
+            ${session.start.toLocaleDateString(
+              "en-GB",
+              {
+                day: "2-digit",
+                month: "short",
+                year: "numeric"
+              }
+            )}
+          </strong>
+
+          <div class="history-time">
+            ${session.start.toLocaleTimeString(
+              "en-GB",
+              {
+                hour: "2-digit",
+                minute: "2-digit"
+              }
+            )}
+            →
+            ${session.end.toLocaleTimeString(
+              "en-GB",
+              {
+                hour: "2-digit",
+                minute: "2-digit"
+              }
+            )}
+          </div>
+        </div>
+
+        <div class="history-right">
+          <strong>
+            ${formatMinutes(
+              session.minutes
+            )}
+          </strong>
+
+          <button
+            type="button"
+            class="delete-entry-btn"
+            data-delete-fast="${session.id}"
+          >
+            Delete
+          </button>
+        </div>
+        `;
+
+
+      area.appendChild(
+        card
       );
 
-    card.className =
-      "history-card";
-
-    const date =
-      session.start
-        .toLocaleDateString(
-          "en-GB",
-          {
-            day: "2-digit",
-            month: "short",
-            year: "numeric"
-          }
-        );
-
-    const startTime =
-      session.start
-        .toLocaleTimeString(
-          "en-GB",
-          {
-            hour: "2-digit",
-            minute: "2-digit"
-          }
-        );
-
-    const endTime =
-      session.end
-        .toLocaleTimeString(
-          "en-GB",
-          {
-            hour: "2-digit",
-            minute: "2-digit"
-          }
-        );
-
-    card.innerHTML =
-      "<div>" +
-        "<strong>" +
-          date +
-        "</strong>" +
-        "<div class='history-time'>" +
-          startTime +
-          " → " +
-          endTime +
-        "</div>" +
-      "</div>" +
-
-      "<div class='history-right'>" +
-        "<strong>" +
-          formatMinutes(
-            session.durationMinutes
-          ) +
-        "</strong>" +
-
-        "<button " +
-          "class='delete-entry-btn' " +
-          "onclick='deleteFast(" +
-          session.id +
-          ")'>" +
-          "Delete" +
-        "</button>" +
-      "</div>";
-
-    historyArea.appendChild(
-      card
-    );
-
-  });
+    }
+  );
 
 }
 
+
+// ----------------------------------------
+// DELETE FAST
+// ----------------------------------------
 
 async function deleteFast(id) {
 
@@ -648,18 +869,25 @@ async function deleteFast(id) {
       "Delete this fasting session?"
     );
 
+
   if (!confirmed) {
     return;
   }
 
-  const { error } =
+
+  const {
+    error
+  } =
     await db
-      .from("fasting_sessions")
+      .from(
+        "fasting_sessions"
+      )
       .delete()
       .eq(
         "id",
         id
       );
+
 
   if (error) {
 
@@ -670,112 +898,68 @@ async function deleteFast(id) {
     );
 
     return;
+
   }
 
+
   await loadFastingHistory();
-  await loadFastingSummary();
 
 }
 
 
 // ========================================
-// WEIGHT TRACKING
+// WEIGHT
 // ========================================
 
-const STARTING_WEIGHT = 167;
-const HEIGHT_CM = 180;
-const GOAL_WEIGHT = 80;
+function calculateBMR(
+  weightKg
+) {
 
-const weightInput =
-  document.getElementById(
-    "weightInput"
+  return Math.round(
+    (
+      10 * weightKg
+    ) +
+    (
+      6.25 * HEIGHT_CM
+    ) -
+    (
+      5 * AGE
+    ) +
+    5
   );
-
-const weightDate =
-  document.getElementById(
-    "weightDate"
-  );
-
-const saveWeightBtn =
-  document.getElementById(
-    "saveWeightBtn"
-  );
-
-const weightMessage =
-  document.getElementById(
-    "weightMessage"
-  );
-
-const currentWeight =
-  document.getElementById(
-    "currentWeight"
-  );
-
-const weightLost =
-  document.getElementById(
-    "weightLost"
-  );
-
-const weightToGoal =
-  document.getElementById(
-    "weightToGoal"
-  );
-
-const goalProgressText =
-  document.getElementById(
-    "goalProgressText"
-  );
-
-const goalProgressBar =
-  document.getElementById(
-    "goalProgressBar"
-  );
-
-const weightLossPercent =
-  document.getElementById(
-    "weightLossPercent"
-  );
-
-const currentBMI =
-  document.getElementById(
-    "currentBMI"
-  );
-
-const weightChange =
-  document.getElementById(
-    "weightChange"
-  );
-
-const weightHistory =
-  document.getElementById(
-    "weightHistory"
-  );
-
-
-function setDefaultWeightDate() {
-
-  const now =
-    new Date();
-
-  const offset =
-    now.getTimezoneOffset();
-
-  const localTime =
-    new Date(
-      now.getTime() -
-      offset * 60000
-    );
-
-  weightDate.value =
-    localTime
-      .toISOString()
-      .slice(0, 16);
 
 }
 
 
-setDefaultWeightDate();
+async function getLatestWeight() {
 
+  const {
+    data
+  } =
+    await db
+      .from(
+        "weight_entries"
+      )
+      .select(
+        "weight_kg"
+      )
+      .order(
+        "recorded_at",
+        {
+          ascending: false
+        }
+      )
+      .limit(1)
+      .maybeSingle();
+
+
+  return data
+    ? Number(
+        data.weight_kg
+      )
+    : STARTING_WEIGHT;
+
+}
 // ----------------------------------------
 // SAVE WEIGHT
 // ----------------------------------------
@@ -784,202 +968,186 @@ async function saveWeight() {
 
   const weight =
     Number(
-      weightInput.value
+      $("weightInput").value
     );
+
 
   if (
     !weight ||
     weight <= 0
   ) {
 
-    weightMessage.textContent =
+    $("weightMessage").textContent =
       "Please enter a valid weight.";
 
     return;
+
   }
 
-  saveWeightBtn.disabled =
+
+  const button =
+    $("saveWeightBtn");
+
+
+  button.disabled =
     true;
 
-  saveWeightBtn.textContent =
+
+  button.textContent =
     "Saving...";
 
-  weightMessage.textContent =
-    "";
 
-  const { error } =
+  const {
+    error
+  } =
     await db
-      .from("weight_entries")
+      .from(
+        "weight_entries"
+      )
       .insert({
-        weight_kg: weight,
+        weight_kg:
+          weight,
+
         recorded_at:
-          weightDate.value
+          $("weightDate").value
             ? new Date(
-                weightDate.value
+                $("weightDate").value
               ).toISOString()
-            : new Date().toISOString()
+            : new Date()
+                .toISOString()
       });
+
+
+  button.disabled =
+    false;
+
+
+  button.textContent =
+    "Save Weight";
+
 
   if (error) {
 
     console.error(error);
 
-    weightMessage.textContent =
+    $("weightMessage").textContent =
       "Unable to save weight.";
 
-    saveWeightBtn.disabled =
-      false;
-
-    saveWeightBtn.textContent =
-      "Save Weight";
-
     return;
+
   }
 
-  weightInput.value =
+
+  $("weightInput").value =
     "";
 
-  setDefaultWeightDate();
 
-  weightMessage.textContent =
+  $("weightDate").value =
+    localDateTimeValue();
+
+
+  $("weightMessage").textContent =
     "Weight saved";
 
-  saveWeightBtn.disabled =
-    false;
-
-  saveWeightBtn.textContent =
-    "Save Weight";
 
   await loadWeights();
+
   await updateTodayDeficit();
 
 }
 
 
 // ----------------------------------------
-// CHART INSTANCES
-// ----------------------------------------
-
-let weightChartInstance = null;
-let deficitChartInstance = null;
-let calorieChartInstance = null;
-let activityChartInstance = null;
-
-
-// ----------------------------------------
 // WEIGHT CHART
 // ----------------------------------------
 
-function drawWeightChart(entries) {
+function drawWeightChart(
+  entries
+) {
 
   const canvas =
-    document.getElementById(
-      "weightChart"
-    );
+    $("weightChart");
+
 
   if (!canvas) {
     return;
   }
 
-  const chartData =
-    [...entries].reverse();
 
-  const labels =
-    chartData.map(entry => {
-
-      const date =
-        new Date(
-          entry.recorded_at
-        );
-
-      return date.toLocaleDateString(
-        "en-GB",
-        {
-          day: "2-digit",
-          month: "short"
-        }
-      );
-
-    });
-
-  const weights =
-    chartData.map(
-      entry =>
-        Number(
-          entry.weight_kg
-        )
-    );
-
-  if (weightChartInstance) {
+  if (
+    weightChartInstance
+  ) {
 
     weightChartInstance.destroy();
 
   }
 
+
+  const rows =
+    [...entries]
+      .reverse();
+
+
   weightChartInstance =
     new Chart(
       canvas,
       {
-        type: "line",
+        type:
+          "line",
 
         data: {
-          labels: labels,
+
+          labels:
+            rows.map(
+              entry =>
+                new Date(
+                  entry.recorded_at
+                )
+                  .toLocaleDateString(
+                    "en-GB",
+                    {
+                      day: "2-digit",
+                      month: "short"
+                    }
+                  )
+            ),
 
           datasets: [
             {
-              label: "Weight (kg)",
-              data: weights,
-              tension: 0.25,
-              pointRadius: 4,
-              pointHoverRadius: 6
+              label:
+                "Weight (kg)",
+
+              data:
+                rows.map(
+                  entry =>
+                    Number(
+                      entry.weight_kg
+                    )
+                ),
+
+              tension:
+                0.25,
+
+              pointRadius:
+                4
             }
           ]
+
         },
 
         options: {
 
-          responsive: true,
+          responsive:
+            true,
 
-          maintainAspectRatio: false,
-
-          interaction: {
-            intersect: false,
-            mode: "index"
-          },
+          maintainAspectRatio:
+            false,
 
           plugins: {
 
             legend: {
-              display: false
-            },
-
-            tooltip: {
-              callbacks: {
-
-                label: function(context) {
-
-                  return (
-                    context.parsed.y
-                      .toFixed(1) +
-                    " kg"
-                  );
-
-                }
-
-              }
-            }
-
-          },
-
-          scales: {
-
-            y: {
-
-              title: {
-                display: true,
-                text: "Weight (kg)"
-              }
-
+              display:
+                false
             }
 
           }
@@ -998,9 +1166,14 @@ function drawWeightChart(entries) {
 
 async function loadWeights() {
 
-  const { data, error } =
+  const {
+    data,
+    error
+  } =
     await db
-      .from("weight_entries")
+      .from(
+        "weight_entries"
+      )
       .select("*")
       .order(
         "recorded_at",
@@ -1008,6 +1181,7 @@ async function loadWeights() {
           ascending: false
         }
       );
+
 
   if (error) {
 
@@ -1017,259 +1191,271 @@ async function loadWeights() {
     );
 
     return;
+
   }
 
+
+  const rows =
+    data || [];
+
+
   if (
-    !data ||
-    data.length === 0
+    rows.length === 0
   ) {
 
-    currentWeight.textContent =
+    $("currentWeight").textContent =
       "—";
 
-    weightLost.textContent =
+    $("weightLost").textContent =
       "—";
 
-    weightToGoal.textContent =
+    $("weightToGoal").textContent =
       "—";
 
-    weightLossPercent.textContent =
+    $("weightLossPercent").textContent =
       "—";
 
-    currentBMI.textContent =
+    $("currentBMI").textContent =
       "—";
 
-    weightChange.textContent =
+    $("weightChange").textContent =
       "No weight recorded yet";
 
-    goalProgressBar.value =
+    $("goalProgressBar").value =
       0;
 
-    goalProgressText.textContent =
+    $("goalProgressText").textContent =
       "No weight recorded yet";
 
-    weightHistory.innerHTML =
+    $("weightHistory").innerHTML =
       "<p>No weight entries yet.</p>";
 
     drawWeightChart([]);
 
     return;
+
   }
 
 
   const latestWeight =
     Number(
-      data[0].weight_kg
+      rows[0].weight_kg
     );
-
-
-  currentWeight.textContent =
-    latestWeight.toFixed(1);
 
 
   const lost =
     STARTING_WEIGHT -
     latestWeight;
 
-  weightLost.textContent =
-    lost.toFixed(1) +
-    " kg";
-
 
   const toGoal =
     latestWeight -
     GOAL_WEIGHT;
 
+
   const totalGoalLoss =
     STARTING_WEIGHT -
     GOAL_WEIGHT;
 
-  const progressMade =
-    STARTING_WEIGHT -
-    latestWeight;
 
-  const goalProgress =
-    totalGoalLoss > 0
-      ? Math.min(
-          100,
-          Math.max(
-            0,
-            (
-              progressMade /
-              totalGoalLoss
-            ) * 100
-          )
-        )
-      : 0;
+  const progress =
+    Math.min(
+      100,
+      Math.max(
+        0,
+        (
+          lost /
+          totalGoalLoss
+        ) *
+        100
+      )
+    );
 
 
-  goalProgressBar.value =
-    goalProgress;
-
-  goalProgressText.textContent =
-    goalProgress.toFixed(1) +
-    "% complete";
+  $("currentWeight").textContent =
+    latestWeight.toFixed(1);
 
 
-  if (toGoal > 0) {
-
-    weightToGoal.textContent =
-      toGoal.toFixed(1) +
-      " kg";
-
-  } else {
-
-    weightToGoal.textContent =
-      "Goal reached";
-
-  }
+  $("weightLost").textContent =
+    lost.toFixed(1) +
+    " kg";
 
 
-  const percentageLost =
+  $("weightToGoal").textContent =
+    toGoal > 0
+      ? toGoal.toFixed(1) +
+        " kg"
+      : "Goal reached";
+
+
+  $("weightLossPercent").textContent =
     (
-      lost /
-      STARTING_WEIGHT
-    ) * 100;
-
-  weightLossPercent.textContent =
-    percentageLost.toFixed(1) +
+      (
+        lost /
+        STARTING_WEIGHT
+      ) *
+      100
+    ).toFixed(1) +
     "%";
 
 
   const heightMetres =
     HEIGHT_CM / 100;
 
-  const bmi =
-    latestWeight /
+
+  $("currentBMI").textContent =
     (
-      heightMetres *
-      heightMetres
-    );
+      latestWeight /
+      (
+        heightMetres *
+        heightMetres
+      )
+    ).toFixed(1);
 
-  currentBMI.textContent =
-    bmi.toFixed(1);
+
+  $("goalProgressBar").value =
+    progress;
 
 
-  if (data.length > 1) {
+  $("goalProgressText").textContent =
+    progress.toFixed(1) +
+    "% complete";
+
+
+  if (
+    rows.length > 1
+  ) {
 
     const previousWeight =
       Number(
-        data[1].weight_kg
+        rows[1].weight_kg
       );
+
 
     const change =
       latestWeight -
       previousWeight;
 
-    if (change < 0) {
 
-      weightChange.textContent =
-        Math.abs(change).toFixed(1) +
+    if (
+      change < 0
+    ) {
+
+      $("weightChange").textContent =
+        Math.abs(
+          change
+        ).toFixed(1) +
         " kg down since last entry";
 
-    } else if (change > 0) {
+    } else if (
+      change > 0
+    ) {
 
-      weightChange.textContent =
+      $("weightChange").textContent =
         change.toFixed(1) +
         " kg up since last entry";
 
     } else {
 
-      weightChange.textContent =
+      $("weightChange").textContent =
         "No change since last entry";
 
     }
 
   } else {
 
-    weightChange.textContent =
+    $("weightChange").textContent =
       "First weight entry";
 
   }
 
 
-  drawWeightChart(data);
+  drawWeightChart(
+    rows
+  );
 
 
-  weightHistory.innerHTML =
+  const area =
+    $("weightHistory");
+
+
+  area.innerHTML =
     "";
 
-  data.forEach(entry => {
 
-    const card =
-      document.createElement(
-        "div"
+  rows.forEach(
+    entry => {
+
+      const date =
+        new Date(
+          entry.recorded_at
+        );
+
+
+      const card =
+        document.createElement(
+          "div"
+        );
+
+
+      card.className =
+        "history-card";
+
+
+      card.innerHTML =
+        `
+        <div>
+
+          <strong>
+            ${date.toLocaleDateString(
+              "en-GB",
+              {
+                day: "2-digit",
+                month: "short",
+                year: "numeric"
+              }
+            )}
+          </strong>
+
+          <div class="history-time">
+            ${date.toLocaleTimeString(
+              "en-GB",
+              {
+                hour: "2-digit",
+                minute: "2-digit"
+              }
+            )}
+          </div>
+
+        </div>
+
+        <div class="history-right">
+
+          <strong>
+            ${Number(
+              entry.weight_kg
+            ).toFixed(1)}
+            kg
+          </strong>
+
+          <button
+            type="button"
+            class="delete-entry-btn"
+            data-delete-weight="${entry.id}"
+          >
+            Delete
+          </button>
+
+        </div>
+        `;
+
+
+      area.appendChild(
+        card
       );
 
-    card.className =
-      "history-card";
-
-
-    const date =
-      new Date(
-        entry.recorded_at
-      );
-
-
-    const dateText =
-      date.toLocaleDateString(
-        "en-GB",
-        {
-          day: "2-digit",
-          month: "short",
-          year: "numeric"
-        }
-      );
-
-
-    const timeText =
-      date.toLocaleTimeString(
-        "en-GB",
-        {
-          hour: "2-digit",
-          minute: "2-digit"
-        }
-      );
-
-
-    card.innerHTML =
-      "<div>" +
-
-        "<strong>" +
-          dateText +
-        "</strong>" +
-
-        "<div class='history-time'>" +
-          timeText +
-        "</div>" +
-
-      "</div>" +
-
-      "<div class='history-right'>" +
-
-        "<strong>" +
-          Number(
-            entry.weight_kg
-          ).toFixed(1) +
-          " kg" +
-        "</strong>" +
-
-        "<button " +
-          "class='delete-entry-btn' " +
-          "onclick='deleteWeight(" +
-          entry.id +
-          ")'>" +
-          "Delete" +
-        "</button>" +
-
-      "</div>";
-
-
-    weightHistory.appendChild(
-      card
-    );
-
-  });
+    }
+  );
 
 }
 
@@ -1278,25 +1464,34 @@ async function loadWeights() {
 // DELETE WEIGHT
 // ----------------------------------------
 
-async function deleteWeight(id) {
+async function deleteWeight(
+  id
+) {
 
   const confirmed =
     confirm(
       "Delete this weight entry?"
     );
 
+
   if (!confirmed) {
     return;
   }
 
-  const { error } =
+
+  const {
+    error
+  } =
     await db
-      .from("weight_entries")
+      .from(
+        "weight_entries"
+      )
       .delete()
       .eq(
         "id",
         id
       );
+
 
   if (error) {
 
@@ -1307,2424 +1502,1379 @@ async function deleteWeight(id) {
     );
 
     return;
+
   }
+
 
   await loadWeights();
-  await updateTodayDeficit();
 
-}
-
-
-saveWeightBtn.addEventListener(
-  "click",
-  saveWeight
-);
-
-
-// ========================================
-// CALORIE TRACKING
-// ========================================
-
-const foodDescription =
-  document.getElementById(
-    "foodDescription"
-  );
-
-const calorieInput =
-  document.getElementById(
-    "calorieInput"
-  );
-
-const foodDate =
-  document.getElementById(
-    "foodDate"
-  );
-
-const saveCaloriesBtn =
-  document.getElementById(
-    "saveCaloriesBtn"
-  );
-
-const calorieMessage =
-  document.getElementById(
-    "calorieMessage"
-  );
-
-const calorieHistory =
-  document.getElementById(
-    "calorieHistory"
-  );
-
-const caloriesToday =
-  document.getElementById(
-    "caloriesToday"
-  );
-
-const summaryCaloriesToday =
-  document.getElementById(
-    "summaryCaloriesToday"
-  );
-
-const calories24h =
-  document.getElementById(
-    "calories24h"
-  );
-
-const calories7Days =
-  document.getElementById(
-    "calories7Days"
-  );
-
-const caloriesDailyAverage =
-  document.getElementById(
-    "caloriesDailyAverage"
-  );
-
-const calories7DayAverage =
-  document.getElementById(
-    "calories7DayAverage"
-  );
-
-
-// ----------------------------------------
-// DEFAULT FOOD DATE
-// ----------------------------------------
-
-function setDefaultFoodDate() {
-
-  const now =
-    new Date();
-
-  const offset =
-    now.getTimezoneOffset();
-
-  const localTime =
-    new Date(
-      now.getTime() -
-      offset * 60000
-    );
-
-  foodDate.value =
-    localTime
-      .toISOString()
-      .slice(0, 16);
-
-}
-
-
-setDefaultFoodDate();
-
-
-// ----------------------------------------
-// SAVE CALORIES
-// ----------------------------------------
-
-async function saveCalories() {
-
-  const calories =
-    Number(
-      calorieInput.value
-    );
-
-  const description =
-    foodDescription.value.trim();
-
-
-  if (
-    !calories ||
-    calories <= 0
-  ) {
-
-    calorieMessage.textContent =
-      "Please enter valid calories.";
-
-    return;
-  }
-
-
-  saveCaloriesBtn.disabled =
-    true;
-
-  saveCaloriesBtn.textContent =
-    "Saving...";
-
-  calorieMessage.textContent =
-    "";
-
-
-  const { error } =
-    await db
-      .from("calorie_entries")
-      .insert({
-        calories: calories,
-        description:
-          description || null,
-        eaten_at:
-          foodDate.value
-            ? new Date(
-                foodDate.value
-              ).toISOString()
-            : new Date().toISOString()
-      });
-
-
-  if (error) {
-
-    console.error(error);
-
-    calorieMessage.textContent =
-      "Unable to save calories.";
-
-    saveCaloriesBtn.disabled =
-      false;
-
-    saveCaloriesBtn.textContent =
-      "Add Calories";
-
-    return;
-  }
-
-
-  calorieInput.value =
-    "";
-
-  foodDescription.value =
-    "";
-
-  setDefaultFoodDate();
-
-  calorieMessage.textContent =
-    "Calories saved";
-
-  await loadCalories();
-  await updateTodayDeficit();
-
-  saveCaloriesBtn.disabled =
-    false;
-
-  saveCaloriesBtn.textContent =
-    "Add Calories";
-
-}
-
-
-saveCaloriesBtn.addEventListener(
-  "click",
-  saveCalories
-);
-
-
-// ----------------------------------------
-// LOAD CALORIES
-// ----------------------------------------
-
-async function loadCalories() {
-
-  const { data, error } =
-    await db
-      .from("calorie_entries")
-      .select("*")
-      .order(
-        "eaten_at",
-        {
-          ascending: false
-        }
-      );
-
-  if (error) {
-
-    console.error(
-      "Unable to load calories:",
-      error
-    );
-
-    return;
-  }
-
-
-  const entries =
-    data || [];
-
-  const now =
-    new Date();
-
-  const startToday =
-    new Date();
-
-  startToday.setHours(
-    0,
-    0,
-    0,
-    0
-  );
-
-
-  const twentyFourHoursAgo =
-    new Date(
-      now.getTime() -
-      24 * 60 * 60 * 1000
-    );
-
-
-  const sevenDaysAgo =
-    new Date();
-
-  sevenDaysAgo.setDate(
-    sevenDaysAgo.getDate() - 6
-  );
-
-  sevenDaysAgo.setHours(
-    0,
-    0,
-    0,
-    0
-  );
-
-
-  let todayTotal = 0;
-  let total24h = 0;
-  let total7Days = 0;
-
-
-  entries.forEach(entry => {
-
-    const eatenAt =
-      new Date(
-        entry.eaten_at
-      );
-
-    const calories =
-      Number(
-        entry.calories
-      );
-
-
-    if (
-      eatenAt >= startToday &&
-      eatenAt <= now
-    ) {
-
-      todayTotal +=
-        calories;
-
-    }
-
-
-    if (
-      eatenAt >= twentyFourHoursAgo &&
-      eatenAt <= now
-    ) {
-
-      total24h +=
-        calories;
-
-    }
-
-
-    if (
-      eatenAt >= sevenDaysAgo &&
-      eatenAt <= now
-    ) {
-
-      total7Days +=
-        calories;
-
-    }
-
-  });
-
-
-  caloriesToday.textContent =
-    Math.round(todayTotal) +
-    " kcal";
-
-  summaryCaloriesToday.textContent =
-    Math.round(todayTotal) +
-    " kcal";
-
-  calories24h.textContent =
-    Math.round(total24h) +
-    " kcal";
-
-  calories7Days.textContent =
-    Math.round(total7Days) +
-    " kcal";
-
-
-  calories7DayAverage.textContent =
-    Math.round(
-      total7Days / 7
-    ) +
-    " kcal";
-
-
-  const trackedCalorieDays =
-    new Set(
-      entries
-        .filter(
-          entry => {
-
-            const date =
-              new Date(
-                entry.eaten_at
-              );
-
-            return (
-              date >= sevenDaysAgo &&
-              date <= now
-            );
-
-          }
-        )
-        .map(
-          entry =>
-            new Date(
-              entry.eaten_at
-            ).toLocaleDateString(
-              "en-CA"
-            )
-        )
-    ).size;
-
-
-  caloriesDailyAverage.textContent =
-    trackedCalorieDays > 0
-      ? Math.round(
-          total7Days /
-          trackedCalorieDays
-        ) +
-        " kcal"
-      : "0 kcal";
-
-
-  const calorieChartLabels =
-    [];
-
-  const calorieChartValues =
-    [];
-
-
-  for (
-    let i = 0;
-    i < 7;
-    i++
-  ) {
-
-    const dayStart =
-      new Date(
-        sevenDaysAgo
-      );
-
-    dayStart.setDate(
-      dayStart.getDate() + i
-    );
-
-
-    const dayEnd =
-      new Date(
-        dayStart
-      );
-
-    dayEnd.setDate(
-      dayEnd.getDate() + 1
-    );
-
-
-    const caloriesForDay =
-      entries
-        .filter(
-          entry => {
-
-            const entryDate =
-              new Date(
-                entry.eaten_at
-              );
-
-            return (
-              entryDate >= dayStart &&
-              entryDate < dayEnd
-            );
-
-          }
-        )
-        .reduce(
-          (total, entry) =>
-            total +
-            Number(
-              entry.calories
-            ),
-          0
-        );
-
-
-    calorieChartLabels.push(
-      dayStart.toLocaleDateString(
-        "en-GB",
-        {
-          day: "2-digit",
-          month: "short"
-        }
-      )
-    );
-
-
-    calorieChartValues.push(
-      Math.round(
-        caloriesForDay
-      )
-    );
-
-  }
-
-
-  const latestWeight =
-    await getLatestWeight();
-
-  const currentBMR =
-    calculateBMR(
-      latestWeight
-    );
-
-  const calorieChartExpenditure =
-    Math.round(
-      currentBMR *
-      ACTIVITY_MULTIPLIER
-    );
-
-
-  drawCalorieChart(
-    calorieChartLabels,
-    calorieChartValues,
-    calorieChartExpenditure
-  );
-
-
-  calorieHistory.innerHTML =
-    "";
-
-
-  if (entries.length === 0) {
-
-    calorieHistory.innerHTML =
-      "<p>No calorie entries yet.</p>";
-
-    return;
-  }
-
-
-  entries.forEach(entry => {
-
-    const card =
-      document.createElement(
-        "div"
-      );
-
-    card.className =
-      "history-card";
-
-
-    const date =
-      new Date(
-        entry.eaten_at
-      );
-
-
-    const dateText =
-      date.toLocaleDateString(
-        "en-GB",
-        {
-          day: "2-digit",
-          month: "short",
-          year: "numeric"
-        }
-      );
-
-
-    const timeText =
-      date.toLocaleTimeString(
-        "en-GB",
-        {
-          hour: "2-digit",
-          minute: "2-digit"
-        }
-      );
-
-
-    const description =
-      entry.description ||
-      "Food / Drink";
-
-
-    card.innerHTML =
-      "<div>" +
-
-        "<strong>" +
-          description +
-        "</strong>" +
-
-        "<div class='history-time'>" +
-          dateText +
-          " · " +
-          timeText +
-        "</div>" +
-
-      "</div>" +
-
-      "<div class='history-right'>" +
-
-        "<strong>" +
-          Math.round(
-            Number(
-              entry.calories
-            )
-          ) +
-          " kcal" +
-        "</strong>" +
-
-        "<button " +
-          "class='delete-entry-btn' " +
-          "onclick='deleteCalories(" +
-          entry.id +
-          ")'>" +
-          "Delete" +
-        "</button>" +
-
-      "</div>";
-
-
-    calorieHistory.appendChild(
-      card
-    );
-
-  });
-
-}
-
-
-// ----------------------------------------
-// DELETE CALORIE ENTRY
-// ----------------------------------------
-
-async function deleteCalories(id) {
-
-  const confirmed =
-    confirm(
-      "Delete this calorie entry?"
-    );
-
-  if (!confirmed) {
-    return;
-  }
-
-  const { error } =
-    await db
-      .from("calorie_entries")
-      .delete()
-      .eq(
-        "id",
-        id
-      );
-
-  if (error) {
-
-    console.error(error);
-
-    alert(
-      "Unable to delete calorie entry."
-    );
-
-    return;
-  }
-
-  await loadCalories();
-  await updateTodayDeficit();
-
-}
-
-// ========================================
-// ACTIVITY TRACKING
-// ========================================
-
-const activityType =
-  document.getElementById(
-    "activityType"
-  );
-
-const activityDuration =
-  document.getElementById(
-    "activityDuration"
-  );
-
-const activityDate =
-  document.getElementById(
-    "activityDate"
-  );
-
-const saveActivityBtn =
-  document.getElementById(
-    "saveActivityBtn"
-  );
-
-const activityMessage =
-  document.getElementById(
-    "activityMessage"
-  );
-
-const activityHistory =
-  document.getElementById(
-    "activityHistory"
-  );
-
-const activityToday =
-  document.getElementById(
-    "activityToday"
-  );
-
-const summaryActivityToday =
-  document.getElementById(
-    "summaryActivityToday"
-  );
-
-const activity7Days =
-  document.getElementById(
-    "activity7Days"
-  );
-
-
-// ----------------------------------------
-// DEFAULT ACTIVITY DATE
-// ----------------------------------------
-
-function setDefaultActivityDate() {
-
-  const now =
-    new Date();
-
-  const offset =
-    now.getTimezoneOffset();
-
-  const localTime =
-    new Date(
-      now.getTime() -
-      offset * 60000
-    );
-
-  activityDate.value =
-    localTime
-      .toISOString()
-      .slice(0, 16);
-
-}
-
-
-setDefaultActivityDate();
-
-
-// ----------------------------------------
-// ACTIVITY CALORIE ESTIMATE
-// ----------------------------------------
-
-const activityMETs = {
-  walking: 3.5,
-  brisk_walking: 4.8,
-  cycling: 6.8,
-  swimming: 6.0,
-  gym: 5.0
-};
-
-
-async function getLatestWeight() {
-
-  const { data, error } =
-    await db
-      .from("weight_entries")
-      .select("weight_kg")
-      .order(
-        "recorded_at",
-        {
-          ascending: false
-        }
-      )
-      .limit(1)
-      .maybeSingle();
-
-
-  if (error) {
-
-    console.error(
-      "Unable to get latest weight:",
-      error
-    );
-
-    return STARTING_WEIGHT;
-
-  }
-
-
-  if (!data) {
-
-    return STARTING_WEIGHT;
-
-  }
-
-
-  return Number(
-    data.weight_kg
-  );
-
-}
-
-
-function calculateActivityCalories(
-  met,
-  weightKg,
-  minutes
-) {
-
-  const calories =
-    (
-      met *
-      3.5 *
-      weightKg /
-      200
-    ) *
-    minutes;
-
-
-  return Math.round(
-    calories
-  );
-
-}
-
-
-async function getWeightAtDate(
-  targetDate
-) {
-
-  const { data, error } =
-    await db
-      .from("weight_entries")
-      .select(
-        "weight_kg, recorded_at"
-      )
-      .lte(
-        "recorded_at",
-        targetDate.toISOString()
-      )
-      .order(
-        "recorded_at",
-        {
-          ascending: false
-        }
-      )
-      .limit(1)
-      .maybeSingle();
-
-
-  if (error) {
-
-    console.error(
-      "Unable to get historical weight:",
-      error
-    );
-
-    return STARTING_WEIGHT;
-
-  }
-
-
-  if (!data) {
-
-    return STARTING_WEIGHT;
-
-  }
-
-
-  return Number(
-    data.weight_kg
-  );
-
-}
-
-
-// ----------------------------------------
-// SAVE ACTIVITY
-// ----------------------------------------
-
-async function saveActivity() {
-
-  const type =
-    activityType.value;
-
-  const minutes =
-    Number(
-      activityDuration.value
-    );
-
-
-  if (!type) {
-
-    activityMessage.textContent =
-      "Please select an activity.";
-
-    return;
-
-  }
-
-
-  if (
-    !minutes ||
-    minutes <= 0
-  ) {
-
-    activityMessage.textContent =
-      "Please enter a valid duration.";
-
-    return;
-
-  }
-
-
-  saveActivityBtn.disabled =
-    true;
-
-  saveActivityBtn.textContent =
-    "Saving...";
-
-  activityMessage.textContent =
-    "";
-
-
-  const weight =
-    await getLatestWeight();
-
-  const met =
-    activityMETs[type];
-
-  const caloriesBurned =
-    calculateActivityCalories(
-      met,
-      weight,
-      minutes
-    );
-
-
-  const { error } =
-    await db
-      .from("activity_entries")
-      .insert({
-        activity_type: type,
-        duration_minutes: minutes,
-        calories_burned: caloriesBurned,
-        performed_at:
-          activityDate.value
-            ? new Date(
-                activityDate.value
-              ).toISOString()
-            : new Date().toISOString()
-      });
-
-
-  if (error) {
-
-    console.error(error);
-
-    activityMessage.textContent =
-      "Unable to save activity.";
-
-    saveActivityBtn.disabled =
-      false;
-
-    saveActivityBtn.textContent =
-      "Add Activity";
-
-    return;
-
-  }
-
-
-  activityType.value =
-    "";
-
-  activityDuration.value =
-    "";
-
-  setDefaultActivityDate();
-
-
-  activityMessage.textContent =
-    "Activity saved — estimated " +
-    caloriesBurned +
-    " kcal burned";
-
-
-  await loadActivities();
-  await updateTodayDeficit();
-
-
-  saveActivityBtn.disabled =
-    false;
-
-  saveActivityBtn.textContent =
-    "Add Activity";
-
-}
-
-
-saveActivityBtn.addEventListener(
-  "click",
-  saveActivity
-);
-
-
-// ----------------------------------------
-// LOAD ACTIVITIES
-// ----------------------------------------
-
-async function loadActivities() {
-
-  const { data, error } =
-    await db
-      .from("activity_entries")
-      .select("*")
-      .order(
-        "performed_at",
-        {
-          ascending: false
-        }
-      );
-
-
-  if (error) {
-
-    console.error(
-      "Unable to load activities:",
-      error
-    );
-
-    return;
-
-  }
-
-
-  const entries =
-    data || [];
-
-
-  const activityChartLabels =
-    [];
-
-  const activityChartValues =
-    [];
-
-
-  const activityChartStart =
-    new Date();
-
-  activityChartStart.setDate(
-    activityChartStart.getDate() - 6
-  );
-
-  activityChartStart.setHours(
-    0,
-    0,
-    0,
-    0
-  );
-
-
-  for (
-    let i = 0;
-    i < 7;
-    i++
-  ) {
-
-    const dayStart =
-      new Date(
-        activityChartStart
-      );
-
-    dayStart.setDate(
-      dayStart.getDate() + i
-    );
-
-
-    const dayEnd =
-      new Date(
-        dayStart
-      );
-
-    dayEnd.setDate(
-      dayEnd.getDate() + 1
-    );
-
-
-    const caloriesForDay =
-      entries
-        .filter(entry => {
-
-          const entryDate =
-            new Date(
-              entry.performed_at
-            );
-
-          return (
-            entryDate >= dayStart &&
-            entryDate < dayEnd
-          );
-
-        })
-        .reduce(
-          (total, entry) =>
-            total +
-            Number(
-              entry.calories_burned
-            ),
-          0
-        );
-
-
-    activityChartLabels.push(
-      dayStart.toLocaleDateString(
-        "en-GB",
-        {
-          day: "2-digit",
-          month: "short"
-        }
-      )
-    );
-
-
-    activityChartValues.push(
-      Math.round(
-        caloriesForDay
-      )
-    );
-
-  }
-
-
-  drawActivityChart(
-    activityChartLabels,
-    activityChartValues
-  );
-
-
-  const now =
-    new Date();
-
-  const startToday =
-    new Date();
-
-  startToday.setHours(
-    0,
-    0,
-    0,
-    0
-  );
-
-
-  const sevenDaysAgo =
-    new Date();
-
-  sevenDaysAgo.setDate(
-    sevenDaysAgo.getDate() - 6
-  );
-
-  sevenDaysAgo.setHours(
-    0,
-    0,
-    0,
-    0
-  );
-
-
-  let burnedToday = 0;
-  let burned7Days = 0;
-
-
-  entries.forEach(entry => {
-
-    const activityTime =
-      new Date(
-        entry.performed_at
-      );
-
-    const calories =
-      Number(
-        entry.calories_burned
-      ) || 0;
-
-
-    if (
-      activityTime >= startToday &&
-      activityTime <= now
-    ) {
-
-      burnedToday +=
-        calories;
-
-    }
-
-
-    if (
-      activityTime >= sevenDaysAgo &&
-      activityTime <= now
-    ) {
-
-      burned7Days +=
-        calories;
-
-    }
-
-  });
-
-
-  activityToday.textContent =
-    Math.round(
-      burnedToday
-    ) +
-    " kcal";
-
-
-  summaryActivityToday.textContent =
-    Math.round(
-      burnedToday
-    ) +
-    " kcal";
-
-
-  activity7Days.textContent =
-    Math.round(
-      burned7Days
-    ) +
-    " kcal";
-
-
-  activityHistory.innerHTML =
-    "";
-
-
-  if (entries.length === 0) {
-
-    activityHistory.innerHTML =
-      "<p>No activities yet.</p>";
-
-    return;
-
-  }
-
-
-  const activityNames = {
-    walking: "Walking",
-    brisk_walking: "Brisk Walking",
-    cycling: "Cycling",
-    swimming: "Swimming",
-    gym: "Gym / General Exercise"
-  };
-
-
-  entries.forEach(entry => {
-
-    const card =
-      document.createElement(
-        "div"
-      );
-
-    card.className =
-      "history-card";
-
-
-    const date =
-      new Date(
-        entry.performed_at
-      );
-
-
-    const dateText =
-      date.toLocaleDateString(
-        "en-GB",
-        {
-          day: "2-digit",
-          month: "short",
-          year: "numeric"
-        }
-      );
-
-
-    const timeText =
-      date.toLocaleTimeString(
-        "en-GB",
-        {
-          hour: "2-digit",
-          minute: "2-digit"
-        }
-      );
-
-
-    const name =
-      activityNames[
-        entry.activity_type
-      ] ||
-      entry.activity_type;
-
-
-    card.innerHTML =
-      "<div>" +
-
-        "<strong>" +
-          name +
-        "</strong>" +
-
-        "<div class='history-time'>" +
-          Math.round(
-            Number(
-              entry.duration_minutes
-            )
-          ) +
-          " min · " +
-          dateText +
-          " · " +
-          timeText +
-        "</div>" +
-
-      "</div>" +
-
-      "<div class='history-right'>" +
-
-        "<strong>" +
-          Math.round(
-            Number(
-              entry.calories_burned
-            )
-          ) +
-          " kcal" +
-        "</strong>" +
-
-        "<button " +
-          "class='delete-entry-btn' " +
-          "onclick='deleteActivity(" +
-          entry.id +
-          ")'>" +
-          "Delete" +
-        "</button>" +
-
-      "</div>";
-
-
-    activityHistory.appendChild(
-      card
-    );
-
-  });
-
-}
-
-
-// ----------------------------------------
-// DELETE ACTIVITY
-// ----------------------------------------
-
-async function deleteActivity(id) {
-
-  const confirmed =
-    confirm(
-      "Delete this activity?"
-    );
-
-  if (!confirmed) {
-    return;
-  }
-
-
-  const { error } =
-    await db
-      .from("activity_entries")
-      .delete()
-      .eq(
-        "id",
-        id
-      );
-
-
-  if (error) {
-
-    console.error(error);
-
-    alert(
-      "Unable to delete activity."
-    );
-
-    return;
-
-  }
-
-
-  await loadActivities();
   await updateTodayDeficit();
 
 }
 
 
 // ========================================
-// SUMMARY
+// FOOD DATABASE
 // ========================================
-
-const AGE = 38;
-
-const ACTIVITY_MULTIPLIER = 1.3;
-
-
-const summaryLastFast =
-  document.getElementById(
-    "summaryLastFast"
-  );
-
-const summaryAverageFast =
-  document.getElementById(
-    "summaryAverageFast"
-  );
-
-const summaryLongestFast =
-  document.getElementById(
-    "summaryLongestFast"
-  );
-
-const summaryDeficitToday =
-  document.getElementById(
-    "summaryDeficitToday"
-  );
-
-const summaryDeficit7Days =
-  document.getElementById(
-    "summaryDeficit7Days"
-  );
-
-const summaryDeficit30Days =
-  document.getElementById(
-    "summaryDeficit30Days"
-  );
-
-const estimatedWeightEquivalent =
-  document.getElementById(
-    "estimatedWeightEquivalent"
-  );
-
-const weightEquivalentLabel =
-  document.getElementById(
-    "weightEquivalentLabel"
-  );
-
-const summary7DaysLabel =
-  document.getElementById(
-    "summary7DaysLabel"
-  );
-
-const summary30DaysLabel =
-  document.getElementById(
-    "summary30DaysLabel"
-  );
-
-
-// ----------------------------------------
-// FASTING SUMMARY
-// ----------------------------------------
-
-async function loadFastingSummary() {
-
-  const { data, error } =
-    await db
-      .from("fasting_sessions")
-      .select(
-        "started_at, ended_at"
-      )
-      .not(
-        "ended_at",
-        "is",
-        null
-      )
-      .order(
-        "ended_at",
-        {
-          ascending: false
-        }
-      );
-
-
-  if (error) {
-
-    console.error(
-      "Unable to load fasting summary:",
-      error
-    );
-
-    return;
-
-  }
-
-
-  const sessions =
-    data || [];
-
-
-  if (
-    sessions.length === 0
-  ) {
-
-    summaryLastFast.textContent =
-      "—";
-
-    summaryAverageFast.textContent =
-      "—";
-
-    summaryLongestFast.textContent =
-      "—";
-
-    return;
-
-  }
-
-
-  const durations =
-    sessions.map(session => {
-
-      const start =
-        new Date(
-          session.started_at
-        );
-
-      const end =
-        new Date(
-          session.ended_at
-        );
-
-      return (
-        end - start
-      );
-
-    });
-
-
-  const lastFast =
-    durations[0];
-
-
-  const averageFast =
-    durations.reduce(
-      (total, duration) =>
-        total + duration,
-      0
-    ) /
-    durations.length;
-
-
-  const longestFast =
-    Math.max(
-      ...durations
-    );
-
-
-  function formatSummaryDuration(
-    milliseconds
-  ) {
-
-    const totalMinutes =
-      Math.round(
-        milliseconds /
-        (1000 * 60)
-      );
-
-    const hours =
-      Math.floor(
-        totalMinutes / 60
-      );
-
-    const minutes =
-      totalMinutes % 60;
-
-
-    return (
-      hours +
-      "h " +
-      minutes +
-      "m"
-    );
-
-  }
-
-
-  summaryLastFast.textContent =
-    formatSummaryDuration(
-      lastFast
-    );
-
-
-  summaryAverageFast.textContent =
-    formatSummaryDuration(
-      averageFast
-    );
-
-
-  summaryLongestFast.textContent =
-    formatSummaryDuration(
-      longestFast
-    );
-
-}
-
-
-// ----------------------------------------
-// BMR CALCULATION
-// Internal calculation only
-// ----------------------------------------
-
-function calculateBMR(
-  weightKg
-) {
-
-  const bmr =
-    (
-      10 * weightKg
-    ) +
-    (
-      6.25 * HEIGHT_CM
-    ) -
-    (
-      5 * AGE
-    ) +
-    5;
-
-
-  return Math.round(
-    bmr
-  );
-
-}
-
-// ----------------------------------------
-// CALORIE DEFICIT SUMMARY
-// ----------------------------------------
-
-async function updateTodayDeficit() {
-
-  const { data: weightHistory, error: weightError } =
-    await db
-      .from("weight_entries")
-      .select(
-        "weight_kg, recorded_at"
-      )
-      .order(
-        "recorded_at",
-        {
-          ascending: true
-        }
-      );
-
-
-  if (weightError) {
-
-    console.error(
-      "Unable to load weight history:",
-      weightError
-    );
-
-    return;
-
-  }
-
-
-  function getHistoricalWeight(
-    targetDate
-  ) {
-
-    let historicalWeight =
-      STARTING_WEIGHT;
-
-
-    (weightHistory || [])
-      .forEach(entry => {
-
-        const entryDate =
-          new Date(
-            entry.recorded_at
-          );
-
-
-        if (
-          entryDate <= targetDate
-        ) {
-
-          historicalWeight =
-            Number(
-              entry.weight_kg
-            );
-
-        }
-
-      });
-
-
-    return historicalWeight;
-
-  }
-
-
-  const weight =
-    await getLatestWeight();
-
-
-  const bmr =
-    calculateBMR(
-      weight
-    );
-
-
-  const dailyExpenditure =
-    bmr *
-    ACTIVITY_MULTIPLIER;
-
-
-  const now =
-    new Date();
-
-
-  const startToday =
-    new Date();
-
-  startToday.setHours(
-    0,
-    0,
-    0,
-    0
-  );
-
-
-  const sevenDaysAgo =
-    new Date(
-      now.getTime() -
-      (
-        7 *
-        24 *
-        60 *
-        60 *
-        1000
-      )
-    );
-
-
-  const thirtyDaysAgo =
-    new Date(
-      now.getTime() -
-      (
-        30 *
-        24 *
-        60 *
-        60 *
-        1000
-      )
-    );
-
-
-  const dayFraction =
-    (
-      now -
-      startToday
-    ) /
-    (
-      24 *
-      60 *
-      60 *
-      1000
-    );
-
-
-  const baselineBurnSoFar =
-    dailyExpenditure *
-    dayFraction;
-
-
-  // --------------------------------------
-  // FOOD DATA
-  // --------------------------------------
-
-  const {
-    data: foodData,
-    error: foodError
-  } =
-    await db
-      .from("calorie_entries")
-      .select(
-        "calories, eaten_at"
-      )
-      .gte(
-        "eaten_at",
-        thirtyDaysAgo.toISOString()
-      )
-      .lte(
-        "eaten_at",
-        now.toISOString()
-      );
-
-
-  if (foodError) {
-
-    console.error(
-      "Unable to load calorie data:",
-      foodError
-    );
-
-    return;
-
-  }
-
-
-  // --------------------------------------
-  // ACTIVITY DATA
-  // --------------------------------------
-
-  const {
-    data: activityData,
-    error: activityError
-  } =
-    await db
-      .from("activity_entries")
-      .select(
-        "calories_burned, duration_minutes, performed_at"
-      )
-      .gte(
-        "performed_at",
-        thirtyDaysAgo.toISOString()
-      )
-      .lte(
-        "performed_at",
-        now.toISOString()
-      );
-
-
-  if (activityError) {
-
-    console.error(
-      "Unable to load activity data:",
-      activityError
-    );
-
-    return;
-
-  }
-
-
-  // --------------------------------------
-  // TODAY
-  // --------------------------------------
-
-  const caloriesEatenToday =
-    (foodData || [])
-      .filter(entry =>
-
-        new Date(
-          entry.eaten_at
-        ) >= startToday
-
-      )
-      .reduce(
-        (total, entry) =>
-          total +
-          Number(
-            entry.calories
-          ),
-        0
-      );
-
-
-  let extraActivityToday =
-    0;
-
-
-  (activityData || [])
-    .filter(entry =>
-
-      new Date(
-        entry.performed_at
-      ) >= startToday
-
-    )
-    .forEach(entry => {
-
-      const grossBurn =
-        Number(
-          entry.calories_burned
-        ) || 0;
-
-
-      const minutes =
-        Number(
-          entry.duration_minutes
-        ) || 0;
-
-
-      const baselineForActivity =
-        (
-          dailyExpenditure /
-          1440
-        ) *
-        minutes;
-
-
-      const extraBurn =
-        Math.max(
-          0,
-          grossBurn -
-          baselineForActivity
-        );
-
-
-      extraActivityToday +=
-        extraBurn;
-
-    });
-
-
-  const todayDeficit =
-    baselineBurnSoFar +
-    extraActivityToday -
-    caloriesEatenToday;
-
-
-  summaryDeficitToday.textContent =
-    Math.round(
-      todayDeficit
-    ) +
-    " kcal";
-
-
-  // --------------------------------------
-  // TRACKING START
-  // --------------------------------------
-
-  const foodDates =
-    (foodData || [])
-      .map(entry =>
-        new Date(
-          entry.eaten_at
-        )
-      );
-
-
-  const firstFoodDate =
-    foodDates.length
-      ? new Date(
-          Math.min(
-            ...foodDates.map(
-              date =>
-                date.getTime()
-            )
-          )
-        )
-      : null;
-
-
-  if (!firstFoodDate) {
-
-    summaryDeficit7Days.textContent =
-      "—";
-
-    summaryDeficit30Days.textContent =
-      "—";
-
-    estimatedWeightEquivalent.textContent =
-      "—";
-
-    summary7DaysLabel.textContent =
-      "Deficit — Last 7 Days";
-
-    summary30DaysLabel.textContent =
-      "Deficit — Last 30 Days";
-
-    weightEquivalentLabel.textContent =
-      "Weight Equivalent";
-
-    drawDeficitChart(
-      [],
-      []
-    );
-
-    return;
-
-  }
-
-
-  const trackingStart =
-    firstFoodDate >
-    thirtyDaysAgo
-      ? firstFoodDate
-      : thirtyDaysAgo;
-
-
-  // --------------------------------------
-  // DAILY DEFICIT CALCULATION
-  // --------------------------------------
-
-  function calculateDayDeficit(
-    dayStart,
-    dayEnd,
-    isToday = false
-  ) {
-
-    const weightForDay =
-      getHistoricalWeight(
-        dayEnd
-      );
-
-
-    const dayBMR =
-      calculateBMR(
-        weightForDay
-      );
-
-
-    const dayExpenditure =
-      dayBMR *
-      ACTIVITY_MULTIPLIER;
-
-
-    let baselineBurn =
-      dayExpenditure;
-
-
-    if (isToday) {
-
-      baselineBurn =
-        dayExpenditure *
-        (
-          (
-            now -
-            dayStart
-          ) /
-          (
-            24 *
-            60 *
-            60 *
-            1000
-          )
-        );
-
-    }
-
-
-    const foodForDay =
-      (foodData || [])
-        .filter(entry => {
-
-          const date =
-            new Date(
-              entry.eaten_at
-            );
-
-
-          return (
-            date >= dayStart &&
-            date < dayEnd
-          );
-
-        })
-        .reduce(
-          (total, entry) =>
-            total +
-            Number(
-              entry.calories
-            ),
-          0
-        );
-
-
-    let extraActivity =
-      0;
-
-
-    (activityData || [])
-      .filter(entry => {
-
-        const date =
-          new Date(
-            entry.performed_at
-          );
-
-
-        return (
-          date >= dayStart &&
-          date < dayEnd
-        );
-
-      })
-      .forEach(entry => {
-
-        const grossBurn =
-          Number(
-            entry.calories_burned
-          ) || 0;
-
-
-        const minutes =
-          Number(
-            entry.duration_minutes
-          ) || 0;
-
-
-        const baselineForActivity =
-          (
-            dayExpenditure /
-            1440
-          ) *
-          minutes;
-
-
-        extraActivity +=
-          Math.max(
-            0,
-            grossBurn -
-            baselineForActivity
-          );
-
-      });
-
-
-    return (
-      baselineBurn +
-      extraActivity -
-      foodForDay
-    );
-
-  }
-
-
-  // --------------------------------------
-  // BUILD DAILY DEFICIT DATA
-  // --------------------------------------
-
-  const dailyDeficits =
-    [];
-
-
-  let cursor =
-    new Date(
-      trackingStart
-    );
-
-
-  cursor.setHours(
-    0,
-    0,
-    0,
-    0
-  );
-
-
-  while (
-    cursor <= now
-  ) {
-
-    const dayStart =
-      new Date(
-        cursor
-      );
-
-
-    const nextDay =
-      new Date(
-        dayStart
-      );
-
-    nextDay.setDate(
-      nextDay.getDate() + 1
-    );
-
-
-    const isToday =
-      dayStart.toDateString() ===
-      now.toDateString();
-
-
-    const dayEnd =
-      isToday
-        ? now
-        : nextDay;
-
-
-    const deficit =
-      calculateDayDeficit(
-        dayStart,
-        dayEnd,
-        isToday
-      );
-
-
-    dailyDeficits.push({
-      date: dayStart,
-      deficit: deficit
-    });
-
-
-    cursor =
-      nextDay;
-
-  }
-
-
-  // --------------------------------------
-  // LAST 7 DAYS
-  // --------------------------------------
-
-  const last7 =
-    dailyDeficits.slice(
-      -7
-    );
-
-
-  const deficit7Days =
-    last7.reduce(
-      (total, day) =>
-        total +
-        day.deficit,
-      0
-    );
-
-
-  // --------------------------------------
-  // LAST 30 DAYS
-  // --------------------------------------
-
-  const last30 =
-    dailyDeficits.slice(
-      -30
-    );
-
-
-  const deficit30Days =
-    last30.reduce(
-      (total, day) =>
-        total +
-        day.deficit,
-      0
-    );
-
-
-  summaryDeficit7Days.textContent =
-    Math.round(
-      deficit7Days
-    ) +
-    " kcal";
-
-
-  summaryDeficit30Days.textContent =
-    Math.round(
-      deficit30Days
-    ) +
-    " kcal";
-
-
-  // --------------------------------------
-  // WEIGHT EQUIVALENT
-  // --------------------------------------
-
-  const weightEquivalent =
-    deficit30Days /
-    7700;
-
-
-  estimatedWeightEquivalent.textContent =
-    weightEquivalent.toFixed(2) +
-    " kg";
-
-
-  // --------------------------------------
-  // DAYS TRACKED LABELS
-  // --------------------------------------
-
-  const trackedDays7 =
-    last7.length;
-
-
-  const trackedDays30 =
-    last30.length;
-
-
-  const displayDays7 =
-    Math.min(
-      7,
-      trackedDays7
-    );
-
-
-  const displayDays30 =
-    Math.min(
+//
+// kcal values are approximate calories
+// per 100 grams for generic foods.
+//
+
+const FOODS = [
+
+  {
+    name:
+      "Chicken breast, cooked",
+    kcalPer100g:
+      165,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Chicken thigh, cooked",
+    kcalPer100g:
+      209,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Chicken, roasted",
+    kcalPer100g:
+      190,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Turkey breast, cooked",
+    kcalPer100g:
+      135,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Beef, lean cooked",
+    kcalPer100g:
+      217,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Beef mince 5% fat, cooked",
+    kcalPer100g:
+      172,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Beef mince 10% fat, cooked",
+    kcalPer100g:
+      217,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Lamb, cooked",
+    kcalPer100g:
+      258,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Pork loin, cooked",
+    kcalPer100g:
+      242,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Salmon, cooked",
+    kcalPer100g:
+      206,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Tuna in water, drained",
+    kcalPer100g:
+      116,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Cod, cooked",
+    kcalPer100g:
+      105,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Prawns, cooked",
+    kcalPer100g:
+      99,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Egg, whole",
+    kcalPer100g:
+      143,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Egg white",
+    kcalPer100g:
+      52,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Rice, white cooked",
+    kcalPer100g:
+      130,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Rice, brown cooked",
+    kcalPer100g:
+      123,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Pasta, cooked",
+    kcalPer100g:
+      131,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Couscous, cooked",
+    kcalPer100g:
+      112,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Quinoa, cooked",
+    kcalPer100g:
+      120,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Oats, dry",
+    kcalPer100g:
+      379,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Bread, white",
+    kcalPer100g:
+      266,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Bread, wholemeal",
+    kcalPer100g:
+      247,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Pitta bread",
+    kcalPer100g:
+      275,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Flour tortilla / wrap",
+    kcalPer100g:
+      312,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Potato, boiled",
+    kcalPer100g:
+      87,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Potato, baked",
+    kcalPer100g:
+      93,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Sweet potato, cooked",
+    kcalPer100g:
+      90,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "French fries",
+    kcalPer100g:
+      312,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Broccoli",
+    kcalPer100g:
+      35,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Cauliflower",
+    kcalPer100g:
+      25,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Carrot",
+    kcalPer100g:
+      41,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Peas",
+    kcalPer100g:
+      81,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Sweetcorn",
+    kcalPer100g:
+      86,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Spinach",
+    kcalPer100g:
+      23,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Tomato",
+    kcalPer100g:
+      18,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Cucumber",
+    kcalPer100g:
+      15,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Lettuce",
+    kcalPer100g:
+      15,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Onion",
+    kcalPer100g:
+      40,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Mushrooms",
+    kcalPer100g:
+      22,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Sweet pepper",
+    kcalPer100g:
+      31,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Avocado",
+    kcalPer100g:
+      160,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Apple",
+    kcalPer100g:
+      52,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Banana",
+    kcalPer100g:
+      89,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Orange",
+    kcalPer100g:
+      47,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Grapes",
+    kcalPer100g:
+      69,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Strawberries",
+    kcalPer100g:
+      32,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Blueberries",
+    kcalPer100g:
+      57,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Mango",
+    kcalPer100g:
+      60,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Watermelon",
+    kcalPer100g:
       30,
-      trackedDays30
-    );
+    source:
+      "Generic food estimate"
+  },
 
+  {
+    name:
+      "Dates",
+    kcalPer100g:
+      282,
+    source:
+      "Generic food estimate"
+  },
 
-  weightEquivalentLabel.textContent =
-    "Weight Equivalent — " +
-    displayDays30 +
-    " days tracked";
+  {
+    name:
+      "Whole milk",
+    kcalPer100g:
+      61,
+    source:
+      "Generic food estimate"
+  },
 
+  {
+    name:
+      "Semi-skimmed milk",
+    kcalPer100g:
+      50,
+    source:
+      "Generic food estimate"
+  },
 
-  summary7DaysLabel.textContent =
-    displayDays7 < 7
-      ? "Deficit — " +
-        displayDays7 +
-        " days tracked"
-      : "Deficit — Last 7 Days";
+  {
+    name:
+      "Skimmed milk",
+    kcalPer100g:
+      35,
+    source:
+      "Generic food estimate"
+  },
 
+  {
+    name:
+      "Greek yogurt 0%",
+    kcalPer100g:
+      59,
+    source:
+      "Generic food estimate"
+  },
 
-  summary30DaysLabel.textContent =
-    displayDays30 < 30
-      ? "Deficit — " +
-        displayDays30 +
-        " days tracked"
-      : "Deficit — Last 30 Days";
+  {
+    name:
+      "Greek yogurt, full fat",
+    kcalPer100g:
+      97,
+    source:
+      "Generic food estimate"
+  },
 
+  {
+    name:
+      "Cheddar cheese",
+    kcalPer100g:
+      403,
+    source:
+      "Generic food estimate"
+  },
 
-  // --------------------------------------
-  // DEFICIT CHART
-  // --------------------------------------
+  {
+    name:
+      "Cottage cheese",
+    kcalPer100g:
+      98,
+    source:
+      "Generic food estimate"
+  },
 
-  const chartDays =
-    last30;
+  {
+    name:
+      "Butter",
+    kcalPer100g:
+      717,
+    source:
+      "Generic food estimate"
+  },
 
+  {
+    name:
+      "Olive oil",
+    kcalPer100g:
+      884,
+    source:
+      "Generic food estimate"
+  },
 
-  const chartLabels =
-    chartDays.map(day =>
+  {
+    name:
+      "Mayonnaise",
+    kcalPer100g:
+      680,
+    source:
+      "Generic food estimate"
+  },
 
-      day.date.toLocaleDateString(
-        "en-GB",
-        {
-          day: "2-digit",
-          month: "short"
-        }
-      )
+  {
+    name:
+      "Peanut butter",
+    kcalPer100g:
+      588,
+    source:
+      "Generic food estimate"
+  },
 
-    );
+  {
+    name:
+      "Almonds",
+    kcalPer100g:
+      579,
+    source:
+      "Generic food estimate"
+  },
 
+  {
+    name:
+      "Walnuts",
+    kcalPer100g:
+      654,
+    source:
+      "Generic food estimate"
+  },
 
-  const chartValues =
-    chartDays.map(day =>
+  {
+    name:
+      "Cashews",
+    kcalPer100g:
+      553,
+    source:
+      "Generic food estimate"
+  },
 
-      Math.round(
-        day.deficit
-      )
+  {
+    name:
+      "Hummus",
+    kcalPer100g:
+      166,
+    source:
+      "Generic food estimate"
+  },
 
-    );
+  {
+    name:
+      "Lentils, cooked",
+    kcalPer100g:
+      116,
+    source:
+      "Generic food estimate"
+  },
 
+  {
+    name:
+      "Chickpeas, cooked",
+    kcalPer100g:
+      164,
+    source:
+      "Generic food estimate"
+  },
 
-  drawDeficitChart(
-    chartLabels,
-    chartValues
-  );
+  {
+    name:
+      "Kidney beans, cooked",
+    kcalPer100g:
+      127,
+    source:
+      "Generic food estimate"
+  },
 
-}
+  {
+    name:
+      "Milk chocolate",
+    kcalPer100g:
+      535,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Dark chocolate",
+    kcalPer100g:
+      598,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Vanilla ice cream",
+    kcalPer100g:
+      207,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Cheese pizza",
+    kcalPer100g:
+      266,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Beef burger patty, cooked",
+    kcalPer100g:
+      250,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Pork sausage, cooked",
+    kcalPer100g:
+      301,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Falafel",
+    kcalPer100g:
+      333,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Doner kebab meat",
+    kcalPer100g:
+      250,
+    source:
+      "Generic food estimate"
+  },
+
+  {
+    name:
+      "Chicken shawarma",
+    kcalPer100g:
+      200,
+    source:
+      "Generic food estimate"
+  }
+
+];
 
 
 // ========================================
-// DEFICIT CHART
+// FOOD SEARCH
 // ========================================
 
-function drawDeficitChart(
-  labels,
-  values
+function showFoodSuggestions(
+  foods,
+  note = ""
 ) {
 
-  const canvas =
-    document.getElementById(
-      "deficitChart"
-    );
+  const box =
+    $("foodSearchResults");
 
 
-  if (!canvas) {
+  box.innerHTML =
+    "";
+
+
+  if (
+    foods.length === 0
+  ) {
+
+    box.innerHTML =
+      `
+      <div class="suggestion-item">
+
+        <div class="suggestion-main">
+
+          <strong>
+            No local match
+          </strong>
+
+          <small>
+            ${
+              note ||
+              "Press Enter to search Open Food Facts"
+            }
+          </small>
+
+        </div>
+
+      </div>
+      `;
+
+
+    box.hidden =
+      false;
+
 
     return;
 
   }
 
 
-  if (deficitChartInstance) {
+  foods
+    .slice(
+      0,
+      12
+    )
+    .forEach(
+      food => {
 
-    deficitChartInstance.destroy();
+        const button =
+          document.createElement(
+            "button"
+          );
 
-  }
+
+        button.type =
+          "button";
 
 
-  deficitChartInstance =
-    new Chart(
-      canvas,
-      {
-        type: "line",
+        button.className =
+          "suggestion-item";
 
-        data: {
 
-          labels: labels,
+        button._food =
+          food;
 
-          datasets: [
-            {
-              label:
-                "Daily Deficit (kcal)",
 
-              data:
-                values,
+        button.innerHTML =
+          `
+          <span class="suggestion-main">
 
-              tension:
-                0.3
-            }
-          ]
+            <strong>
+              ${food.name}
+            </strong>
 
-        },
+            <small>
+              ${
+                food.source ||
+                "Food data"
+              }
+            </small>
 
-        options: {
+          </span>
 
-          responsive:
-            true,
+          <span class="suggestion-value">
+            ${Math.round(
+              food.kcalPer100g
+            )}
+            kcal/100g
+          </span>
+          `;
 
-          scales: {
 
-            y: {
-              beginAtZero:
-                false
-            }
-
-          }
-
-        }
+        box.appendChild(
+          button
+        );
 
       }
     );
 
+
+  box.hidden =
+    false;
+
+}
+
+
+// ----------------------------------------
+// LOCAL FOOD SEARCH
+// ----------------------------------------
+
+function searchLocalFoods() {
+
+  const query =
+    $("foodSearchInput")
+      .value
+      .trim()
+      .toLowerCase();
+
+
+  selectedFood =
+    null;
+
+
+  $("selectedFoodCard").hidden =
+    true;
+
+
+  $("calculatedCalories").textContent =
+    "— kcal";
+
+
+  if (
+    query.length < 2
+  ) {
+
+    $("foodSearchResults").hidden =
+      true;
+
+    return;
+
+  }
+
+
+  const words =
+    query.split(
+      /\s+/
+    );
+
+
+  const matches =
+    FOODS.filter(
+      food =>
+        words.every(
+          word =>
+            food.name
+              .toLowerCase()
+              .includes(
+                word
+              )
+        )
+    );
+
+
+  showFoodSuggestions(
+    matches
+  );
+
+}
+
+
+// ----------------------------------------
+// ONLINE OPEN FOOD FACTS SEARCH
+// Press Enter after typing to use this.
+// ----------------------------------------
+
+async function searchOpenFoodFacts(
+  query
+) {
+
+  const box =
+    $("foodSearchResults");
+
+
+  box.hidden =
+    false;
+
+
+  box.innerHTML =
+    `
+    <div class="suggestion-item">
+
+      <div class="suggestion-main">
+
+        <strong>
+          Searching Open Food Facts…
+        </strong>
+
+      </div>
+
+    </div>
+    `;
+
+
+  try {
+
+    const url =
+      "https://world.openfoodfacts.org/cgi/search.pl" +
+      "?search_terms=" +
+      encodeURIComponent(
+        query
+      ) +
+      "&search_simple=1" +
+      "&action=process" +
+      "&json=1" +
+      "&page_size=12";
+
+
+    const response =
+      await fetch(
+        url
+      );
+
+
+    if (
+      !response.ok
+    ) {
+
+      throw new Error(
+        "Search failed"
+      );
+
+    }
+
+
+    const json =
+      await response.json();
+
+
+    const foods =
+      (
+        json.products ||
+        []
+      )
+        .map(
+          product => {
+
+            const calories =
+              Number(
+                product
+                  .nutriments
+                  ?.[
+                    "energy-kcal_100g"
+                  ]
+              );
+
+
+            return {
+
+              name:
+                product.product_name ||
+                product.generic_name ||
+                "Unnamed product",
+
+              kcalPer100g:
+                calories,
+
+              source:
+                product.brands
+                  ? "Open Food Facts · " +
+                    product.brands
+                  : "Open Food Facts"
+
+            };
+
+          }
+        )
+        .filter(
+          food =>
+            food.name &&
+            Number.isFinite(
+              food.kcalPer100g
+            ) &&
+            food.kcalPer100g >
+              0
+        );
+
+
+    showFoodSuggestions(
+      foods,
+      "No usable calorie result found."
+    );
+
+  } catch (
+    error
+  ) {
+
+    console.error(
+      error
+    );
+
+
+    showFoodSuggestions(
+      [],
+      "Online search unavailable. Use manual entry instead."
+    );
+
+  }
+
+}
+
+
+// ----------------------------------------
+// SELECT FOOD
+// ----------------------------------------
+
+function selectFood(
+  food
+) {
+
+  selectedFood =
+    food;
+
+
+  $("foodSearchInput").value =
+    food.name;
+
+
+  $("foodSearchResults").hidden =
+    true;
+
+
+  $("selectedFoodName").textContent =
+    food.name;
+
+
+  $("selectedFoodNutrition").textContent =
+    Math.round(
+      food.kcalPer100g
+    ) +
+    " kcal per 100 g · " +
+    food.source;
+
+
+  $("selectedFoodCard").hidden =
+    false;
+
+
+  calculateSelectedFoodCalories();
+
+}
+
+
+// ----------------------------------------
+// CALCULATE FOOD CALORIES
+// ----------------------------------------
+
+function calculateSelectedFoodCalories() {
+
+  const grams =
+    Number(
+      $("foodAmount").value
+    );
+
+
+  if (
+    !selectedFood ||
+    !grams ||
+    grams <= 0
+  ) {
+
+    $("calculatedCalories").textContent =
+      "— kcal";
+
+    return null;
+
+  }
+
+
+  const calories =
+    (
+      selectedFood
+        .kcalPer100g *
+      grams
+    ) /
+    100;
+
+
+  $("calculatedCalories").textContent =
+    Math.round(
+      calories
+    ) +
+    " kcal";
+
+
+  return calories;
+
+}
+
+
+// ----------------------------------------
+// FOOD ENTRY MODE
+// ----------------------------------------
+
+function setFoodMode(
+  mode
+) {
+
+  foodMode =
+    mode;
+
+
+  const searchMode =
+    mode === "search";
+
+
+  $("foodSearchMode").hidden =
+    !searchMode;
+
+
+  $("manualCaloriesMode").hidden =
+    searchMode;
+
+
+  $("foodSearchModeBtn")
+    .classList
+    .toggle(
+      "active",
+      searchMode
+    );
+
+
+  $("manualCaloriesModeBtn")
+    .classList
+    .toggle(
+      "active",
+      !searchMode
+    );
+
+}
+// ========================================
+// SAVE CALORIES
+// ========================================
+
+async function saveCalories() {
+
+  let calories;
+  let description;
+
+
+  if (
+    foodMode === "search"
+  ) {
+
+    calories =
+      calculateSelectedFoodCalories();
+
+
+    if (
+      !selectedFood ||
+      !calories
+    ) {
+
+      $("calorieMessage").textContent =
+        "Select a food and enter the amount in grams.";
+
+      return;
+
+    }
+
+
+    description =
+      selectedFood.name +
+      " · " +
+      Number(
+        $("foodAmount").value
+      ) +
+      " g";
+
+  } else {
+
+    calories =
+      Number(
+        $("manualCalorieInput").value
+      );
+
+
+    description =
+      $("manualFoodDescription")
+        .value
+        .trim();
+
+
+    if (
+      !calories ||
+      calories <= 0
+    ) {
+
+      $("calorieMessage").textContent =
+        "Please enter valid calories.";
+
+      return;
+
+    }
+
+  }
+
+
+  const button =
+    $("saveCaloriesBtn");
+
+
+  button.disabled =
+    true;
+
+
+  button.textContent =
+    "Saving...";
+
+
+  const {
+    error
+  } =
+    await db
+      .from(
+        "calorie_entries"
+      )
+      .insert({
+
+        calories:
+          calories,
+
+        description:
+          description ||
+          null,
+
+        eaten_at:
+          $("foodDate").value
+            ? new Date(
+                $("foodDate").value
+              ).toISOString()
+            : new Date()
+                .toISOString()
+
+      });
+
+
+  button.disabled =
+    false;
+
+
+  button.textContent =
+    "Add Calories";
+
+
+  if (error) {
+
+    console.error(
+      error
+    );
+
+
+    $("calorieMessage").textContent =
+      "Unable to save calories.";
+
+    return;
+
+  }
+
+
+  selectedFood =
+    null;
+
+
+  $("foodSearchInput").value =
+    "";
+
+
+  $("foodAmount").value =
+    "";
+
+
+  $("selectedFoodCard").hidden =
+    true;
+
+
+  $("calculatedCalories").textContent =
+    "— kcal";
+
+
+  $("manualFoodDescription").value =
+    "";
+
+
+  $("manualCalorieInput").value =
+    "";
+
+
+  $("foodDate").value =
+    localDateTimeValue();
+
+
+  $("calorieMessage").textContent =
+    "Calories saved";
+
+
+  await loadCalories();
+
+  await updateTodayDeficit();
+
 }
 
 
 // ========================================
-// CALORIE INTAKE CHART
+// CALORIE CHART
 // ========================================
 
 function drawCalorieChart(
   labels,
   values,
-  dailyExpenditure
+  expenditure
 ) {
 
   const canvas =
-    document.getElementById(
-      "calorieChart"
-    );
+    $("calorieChart");
 
 
   if (!canvas) {
-
     return;
-
   }
 
 
-  if (calorieChartInstance) {
+  if (
+    calorieChartInstance
+  ) {
 
     calorieChartInstance.destroy();
 
@@ -3735,7 +2885,9 @@ function drawCalorieChart(
     new Chart(
       canvas,
       {
-        type: "bar",
+
+        type:
+          "bar",
 
         data: {
 
@@ -3759,16 +2911,16 @@ function drawCalorieChart(
               data:
                 labels.map(
                   () =>
-                    dailyExpenditure
+                    expenditure
                 ),
 
               type:
                 "line",
 
-              tension:
+              pointRadius:
                 0,
 
-              pointRadius:
+              tension:
                 0
             }
 
@@ -3799,6 +2951,1439 @@ function drawCalorieChart(
 
 
 // ========================================
+// LOAD CALORIES
+// ========================================
+
+async function loadCalories() {
+
+  const {
+    data,
+    error
+  } =
+    await db
+      .from(
+        "calorie_entries"
+      )
+      .select("*")
+      .order(
+        "eaten_at",
+        {
+          ascending: false
+        }
+      );
+
+
+  if (error) {
+
+    console.error(
+      "Unable to load calories:",
+      error
+    );
+
+    return;
+
+  }
+
+
+  const rows =
+    data || [];
+
+
+  const now =
+    new Date();
+
+
+  const startToday =
+    new Date();
+
+
+  startToday.setHours(
+    0,
+    0,
+    0,
+    0
+  );
+
+
+  const last24Hours =
+    new Date(
+      now.getTime() -
+      86400000
+    );
+
+
+  const sevenDaysAgo =
+    new Date();
+
+
+  sevenDaysAgo.setDate(
+    sevenDaysAgo.getDate() -
+    6
+  );
+
+
+  sevenDaysAgo.setHours(
+    0,
+    0,
+    0,
+    0
+  );
+
+
+  function totalCalories(
+    predicate
+  ) {
+
+    return rows
+      .filter(
+        predicate
+      )
+      .reduce(
+        (
+          total,
+          entry
+        ) =>
+          total +
+          Number(
+            entry.calories
+          ),
+        0
+      );
+
+  }
+
+
+  const todayCalories =
+    totalCalories(
+      entry => {
+
+        const date =
+          new Date(
+            entry.eaten_at
+          );
+
+
+        return (
+          date >=
+            startToday &&
+          date <=
+            now
+        );
+
+      }
+    );
+
+
+  const calories24Hours =
+    totalCalories(
+      entry => {
+
+        const date =
+          new Date(
+            entry.eaten_at
+          );
+
+
+        return (
+          date >=
+            last24Hours &&
+          date <=
+            now
+        );
+
+      }
+    );
+
+
+  const calories7Days =
+    totalCalories(
+      entry => {
+
+        const date =
+          new Date(
+            entry.eaten_at
+          );
+
+
+        return (
+          date >=
+            sevenDaysAgo &&
+          date <=
+            now
+        );
+
+      }
+    );
+
+
+  $("caloriesToday").textContent =
+    Math.round(
+      todayCalories
+    ) +
+    " kcal";
+
+
+  $("summaryCaloriesToday").textContent =
+    Math.round(
+      todayCalories
+    ) +
+    " kcal";
+
+
+  $("calories24h").textContent =
+    Math.round(
+      calories24Hours
+    ) +
+    " kcal";
+
+
+  $("calories7Days").textContent =
+    Math.round(
+      calories7Days
+    ) +
+    " kcal";
+
+
+  $("calories7DayAverage").textContent =
+    Math.round(
+      calories7Days /
+      7
+    ) +
+    " kcal";
+
+
+  const loggedDays =
+    new Set(
+
+      rows
+        .filter(
+          entry => {
+
+            const date =
+              new Date(
+                entry.eaten_at
+              );
+
+
+            return (
+              date >=
+                sevenDaysAgo &&
+              date <=
+                now
+            );
+
+          }
+        )
+        .map(
+          entry =>
+            new Date(
+              entry.eaten_at
+            )
+              .toLocaleDateString(
+                "en-CA"
+              )
+        )
+
+    ).size;
+
+
+  $("caloriesDailyAverage").textContent =
+    loggedDays
+      ? Math.round(
+          calories7Days /
+          loggedDays
+        ) +
+        " kcal"
+      : "0 kcal";
+
+
+  const labels =
+    [];
+
+
+  const values =
+    [];
+
+
+  for (
+    let i = 0;
+    i < 7;
+    i++
+  ) {
+
+    const dayStart =
+      new Date(
+        sevenDaysAgo
+      );
+
+
+    dayStart.setDate(
+      dayStart.getDate() +
+      i
+    );
+
+
+    const dayEnd =
+      new Date(
+        dayStart
+      );
+
+
+    dayEnd.setDate(
+      dayEnd.getDate() +
+      1
+    );
+
+
+    labels.push(
+      dayStart
+        .toLocaleDateString(
+          "en-GB",
+          {
+            day: "2-digit",
+            month: "short"
+          }
+        )
+    );
+
+
+    values.push(
+      Math.round(
+
+        totalCalories(
+          entry => {
+
+            const date =
+              new Date(
+                entry.eaten_at
+              );
+
+
+            return (
+              date >=
+                dayStart &&
+              date <
+                dayEnd
+            );
+
+          }
+        )
+
+      )
+    );
+
+  }
+
+
+  const weight =
+    await getLatestWeight();
+
+
+  const expenditure =
+    Math.round(
+      calculateBMR(
+        weight
+      ) *
+      ACTIVITY_MULTIPLIER
+    );
+
+
+  drawCalorieChart(
+    labels,
+    values,
+    expenditure
+  );
+
+
+  const area =
+    $("calorieHistory");
+
+
+  area.innerHTML =
+    rows.length
+      ? ""
+      : "<p>No calorie entries yet.</p>";
+
+
+  rows.forEach(
+    entry => {
+
+      const date =
+        new Date(
+          entry.eaten_at
+        );
+
+
+      const card =
+        document.createElement(
+          "div"
+        );
+
+
+      card.className =
+        "history-card";
+
+
+      card.innerHTML =
+        `
+        <div>
+
+          <strong>
+            ${
+              entry.description ||
+              "Food / drink"
+            }
+          </strong>
+
+          <div class="history-time">
+
+            ${date.toLocaleDateString(
+              "en-GB",
+              {
+                day: "2-digit",
+                month: "short",
+                year: "numeric"
+              }
+            )}
+
+            ·
+
+            ${date.toLocaleTimeString(
+              "en-GB",
+              {
+                hour: "2-digit",
+                minute: "2-digit"
+              }
+            )}
+
+          </div>
+
+        </div>
+
+        <div class="history-right">
+
+          <strong>
+            ${Math.round(
+              Number(
+                entry.calories
+              )
+            )}
+            kcal
+          </strong>
+
+          <button
+            type="button"
+            class="delete-entry-btn"
+            data-delete-calorie="${entry.id}"
+          >
+            Delete
+          </button>
+
+        </div>
+        `;
+
+
+      area.appendChild(
+        card
+      );
+
+    }
+  );
+
+}
+
+
+// ========================================
+// DELETE CALORIE ENTRY
+// ========================================
+
+async function deleteCalories(
+  id
+) {
+
+  const confirmed =
+    confirm(
+      "Delete this calorie entry?"
+    );
+
+
+  if (!confirmed) {
+    return;
+  }
+
+
+  const {
+    error
+  } =
+    await db
+      .from(
+        "calorie_entries"
+      )
+      .delete()
+      .eq(
+        "id",
+        id
+      );
+
+
+  if (error) {
+
+    console.error(
+      error
+    );
+
+
+    alert(
+      "Unable to delete calorie entry."
+    );
+
+
+    return;
+
+  }
+
+
+  await loadCalories();
+
+  await updateTodayDeficit();
+
+}
+
+
+// ========================================
+// ACTIVITY DATABASE
+// ========================================
+//
+// MET values are used to estimate gross
+// activity energy expenditure.
+//
+
+const ACTIVITIES = [
+
+  {
+    name:
+      "Walking, easy",
+    met:
+      2.8,
+    keywords:
+      [
+        "walk",
+        "walking"
+      ]
+  },
+
+  {
+    name:
+      "Walking, moderate",
+    met:
+      3.5,
+    keywords:
+      [
+        "walk",
+        "walking"
+      ]
+  },
+
+  {
+    name:
+      "Walking, brisk",
+    met:
+      4.8,
+    keywords:
+      [
+        "walk",
+        "walking",
+        "brisk"
+      ]
+  },
+
+  {
+    name:
+      "Walking uphill",
+    met:
+      6.0,
+    keywords:
+      [
+        "walk",
+        "walking",
+        "hill"
+      ]
+  },
+
+  {
+    name:
+      "Running, light jog",
+    met:
+      7.0,
+    keywords:
+      [
+        "run",
+        "running",
+        "jog",
+        "cardio"
+      ]
+  },
+
+  {
+    name:
+      "Running, 8 km/h",
+    met:
+      8.3,
+    keywords:
+      [
+        "run",
+        "running",
+        "cardio"
+      ]
+  },
+
+  {
+    name:
+      "Running, 10 km/h",
+    met:
+      9.8,
+    keywords:
+      [
+        "run",
+        "running",
+        "cardio"
+      ]
+  },
+
+  {
+    name:
+      "Running, 12 km/h",
+    met:
+      11.5,
+    keywords:
+      [
+        "run",
+        "running",
+        "cardio"
+      ]
+  },
+
+  {
+    name:
+      "Cycling, easy",
+    met:
+      4.0,
+    keywords:
+      [
+        "cycle",
+        "cycling",
+        "bike"
+      ]
+  },
+
+  {
+    name:
+      "Cycling, moderate",
+    met:
+      6.8,
+    keywords:
+      [
+        "cycle",
+        "cycling",
+        "bike"
+      ]
+  },
+
+  {
+    name:
+      "Cycling, vigorous",
+    met:
+      10.0,
+    keywords:
+      [
+        "cycle",
+        "cycling",
+        "bike"
+      ]
+  },
+
+  {
+    name:
+      "Stationary bike, moderate",
+    met:
+      6.8,
+    keywords:
+      [
+        "bike",
+        "cycling",
+        "gym",
+        "cardio"
+      ]
+  },
+
+  {
+    name:
+      "Stationary bike, vigorous",
+    met:
+      10.5,
+    keywords:
+      [
+        "bike",
+        "cycling",
+        "gym",
+        "cardio"
+      ]
+  },
+
+  {
+    name:
+      "Swimming, easy",
+    met:
+      4.8,
+    keywords:
+      [
+        "swim",
+        "swimming"
+      ]
+  },
+
+  {
+    name:
+      "Swimming, moderate",
+    met:
+      6.0,
+    keywords:
+      [
+        "swim",
+        "swimming"
+      ]
+  },
+
+  {
+    name:
+      "Swimming, vigorous",
+    met:
+      9.8,
+    keywords:
+      [
+        "swim",
+        "swimming"
+      ]
+  },
+
+  {
+    name:
+      "Elliptical trainer",
+    met:
+      5.0,
+    keywords:
+      [
+        "elliptical",
+        "gym",
+        "cardio"
+      ]
+  },
+
+  {
+    name:
+      "Rowing machine, moderate",
+    met:
+      7.0,
+    keywords:
+      [
+        "row",
+        "rowing",
+        "gym",
+        "cardio"
+      ]
+  },
+
+  {
+    name:
+      "Rowing machine, vigorous",
+    met:
+      8.5,
+    keywords:
+      [
+        "row",
+        "rowing",
+        "gym",
+        "cardio"
+      ]
+  },
+
+  {
+    name:
+      "Stair machine",
+    met:
+      9.0,
+    keywords:
+      [
+        "stairs",
+        "stair",
+        "gym",
+        "cardio"
+      ]
+  },
+
+  {
+    name:
+      "Aerobics, low impact",
+    met:
+      5.0,
+    keywords:
+      [
+        "aerobics",
+        "cardio"
+      ]
+  },
+
+  {
+    name:
+      "Aerobics, high impact",
+    met:
+      7.3,
+    keywords:
+      [
+        "aerobics",
+        "cardio"
+      ]
+  },
+
+  {
+    name:
+      "HIIT",
+    met:
+      8.0,
+    keywords:
+      [
+        "hiit",
+        "cardio",
+        "interval"
+      ]
+  },
+
+  {
+    name:
+      "Circuit training",
+    met:
+      8.0,
+    keywords:
+      [
+        "circuit",
+        "gym",
+        "cardio"
+      ]
+  },
+
+  {
+    name:
+      "Strength training, general",
+    met:
+      3.5,
+    keywords:
+      [
+        "weights",
+        "weight",
+        "strength",
+        "gym"
+      ]
+  },
+
+  {
+    name:
+      "Strength training, vigorous",
+    met:
+      6.0,
+    keywords:
+      [
+        "weights",
+        "weight",
+        "strength",
+        "gym"
+      ]
+  },
+
+  {
+    name:
+      "Yoga",
+    met:
+      2.5,
+    keywords:
+      [
+        "yoga"
+      ]
+  },
+
+  {
+    name:
+      "Pilates",
+    met:
+      3.0,
+    keywords:
+      [
+        "pilates"
+      ]
+  },
+
+  {
+    name:
+      "Dancing, moderate",
+    met:
+      4.5,
+    keywords:
+      [
+        "dance",
+        "dancing"
+      ]
+  },
+
+  {
+    name:
+      "Football",
+    met:
+      7.0,
+    keywords:
+      [
+        "football",
+        "soccer"
+      ]
+  },
+
+  {
+    name:
+      "Basketball",
+    met:
+      6.5,
+    keywords:
+      [
+        "basketball"
+      ]
+  },
+
+  {
+    name:
+      "Tennis",
+    met:
+      7.3,
+    keywords:
+      [
+        "tennis"
+      ]
+  },
+
+  {
+    name:
+      "Badminton",
+    met:
+      5.5,
+    keywords:
+      [
+        "badminton"
+      ]
+  },
+
+  {
+    name:
+      "Golf, walking",
+    met:
+      4.8,
+    keywords:
+      [
+        "golf"
+      ]
+  },
+
+  {
+    name:
+      "Gardening",
+    met:
+      3.8,
+    keywords:
+      [
+        "garden",
+        "gardening"
+      ]
+  },
+
+  {
+    name:
+      "Housework, moderate",
+    met:
+      3.5,
+    keywords:
+      [
+        "housework",
+        "cleaning"
+      ]
+  },
+
+  {
+    name:
+      "Vacuuming",
+    met:
+      3.3,
+    keywords:
+      [
+        "vacuum",
+        "vacuuming",
+        "cleaning"
+      ]
+  },
+
+  {
+    name:
+      "Stairs, general",
+    met:
+      4.0,
+    keywords:
+      [
+        "stairs",
+        "stair"
+      ]
+  }
+
+];
+
+
+// ========================================
+// ACTIVITY CALORIE CALCULATION
+// ========================================
+
+function activityCalories(
+  met,
+  weight,
+  minutes
+) {
+
+  return Math.round(
+    (
+      met *
+      3.5 *
+      weight /
+      200
+    ) *
+    minutes
+  );
+
+}
+
+
+// ========================================
+// ACTIVITY SEARCH
+// ========================================
+
+function showActivitySuggestions() {
+
+  const query =
+    $("activitySearchInput")
+      .value
+      .trim()
+      .toLowerCase();
+
+
+  selectedActivity =
+    null;
+
+
+  $("selectedActivityCard").hidden =
+    true;
+
+
+  $("estimatedActivityCalories").textContent =
+    "— kcal";
+
+
+  const box =
+    $("activitySearchResults");
+
+
+  if (
+    query.length < 1
+  ) {
+
+    box.hidden =
+      true;
+
+    return;
+
+  }
+
+
+  const matches =
+    ACTIVITIES
+      .filter(
+        activity => {
+
+          const nameMatch =
+            activity.name
+              .toLowerCase()
+              .includes(
+                query
+              );
+
+
+          const keywordMatch =
+            activity.keywords
+              .some(
+                keyword =>
+                  keyword.includes(
+                    query
+                  )
+              );
+
+
+          return (
+            nameMatch ||
+            keywordMatch
+          );
+
+        }
+      )
+      .slice(
+        0,
+        12
+      );
+
+
+  box.innerHTML =
+    "";
+
+
+  matches.forEach(
+    activity => {
+
+      const button =
+        document.createElement(
+          "button"
+        );
+
+
+      button.type =
+        "button";
+
+
+      button.className =
+        "suggestion-item";
+
+
+      button._activity =
+        activity;
+
+
+      button.innerHTML =
+        `
+        <span class="suggestion-main">
+
+          <strong>
+            ${activity.name}
+          </strong>
+
+          <small>
+            MET ${activity.met}
+          </small>
+
+        </span>
+
+        <span class="suggestion-value">
+          Select
+        </span>
+        `;
+
+
+      box.appendChild(
+        button
+      );
+
+    }
+  );
+
+
+  box.hidden =
+    matches.length === 0;
+
+}
+
+
+// ========================================
+// SELECT ACTIVITY
+// ========================================
+
+async function selectActivity(
+  activity
+) {
+
+  selectedActivity =
+    activity;
+
+
+  $("activitySearchInput").value =
+    activity.name;
+
+
+  $("activityType").value =
+    activity.name;
+
+
+  $("activitySearchResults").hidden =
+    true;
+
+
+  $("selectedActivityName").textContent =
+    activity.name;
+
+
+  $("selectedActivityMET").textContent =
+    "MET " +
+    activity.met;
+
+
+  $("selectedActivityCard").hidden =
+    false;
+
+
+  await updateActivityEstimate();
+
+}
+
+
+// ========================================
+// UPDATE ACTIVITY ESTIMATE
+// ========================================
+
+async function updateActivityEstimate() {
+
+  const minutes =
+    Number(
+      $("activityDuration").value
+    );
+
+
+  if (
+    !selectedActivity ||
+    !minutes ||
+    minutes <= 0
+  ) {
+
+    $("estimatedActivityCalories").textContent =
+      "— kcal";
+
+    return null;
+
+  }
+
+
+  const weight =
+    await getLatestWeight();
+
+
+  const calories =
+    activityCalories(
+      selectedActivity.met,
+      weight,
+      minutes
+    );
+
+
+  $("estimatedActivityCalories").textContent =
+    calories +
+    " kcal";
+
+
+  return calories;
+
+}
+// ========================================
+// SAVE ACTIVITY
+// ========================================
+
+async function saveActivity() {
+
+  const minutes =
+    Number(
+      $("activityDuration").value
+    );
+
+
+  const manualCalories =
+    Number(
+      $("manualActivityCalories").value
+    );
+
+
+  if (
+    !minutes ||
+    minutes <= 0
+  ) {
+
+    $("activityMessage").textContent =
+      "Please enter the activity duration.";
+
+    return;
+
+  }
+
+
+  if (
+    !selectedActivity &&
+    !manualCalories
+  ) {
+
+    $("activityMessage").textContent =
+      "Select an activity or enter calories from your device.";
+
+    return;
+
+  }
+
+
+  let estimatedCalories =
+    null;
+
+
+  if (
+    selectedActivity
+  ) {
+
+    estimatedCalories =
+      await updateActivityEstimate();
+
+  }
+
+
+  const finalCalories =
+    manualCalories > 0
+      ? manualCalories
+      : estimatedCalories;
+
+
+  const activityName =
+    selectedActivity
+      ? selectedActivity.name
+      : (
+          $("activitySearchInput")
+            .value
+            .trim() ||
+          "Activity"
+        );
+
+
+  if (
+    !finalCalories ||
+    finalCalories <= 0
+  ) {
+
+    $("activityMessage").textContent =
+      "Unable to calculate calories.";
+
+    return;
+
+  }
+
+
+  const button =
+    $("saveActivityBtn");
+
+
+  button.disabled =
+    true;
+
+
+  button.textContent =
+    "Saving...";
+
+
+  const {
+    error
+  } =
+    await db
+      .from(
+        "activity_entries"
+      )
+      .insert({
+
+        activity_type:
+          activityName,
+
+        duration_minutes:
+          minutes,
+
+        calories_burned:
+          finalCalories,
+
+        performed_at:
+          $("activityDate").value
+            ? new Date(
+                $("activityDate").value
+              ).toISOString()
+            : new Date()
+                .toISOString()
+
+      });
+
+
+  button.disabled =
+    false;
+
+
+  button.textContent =
+    "Add Activity";
+
+
+  if (error) {
+
+    console.error(
+      error
+    );
+
+
+    $("activityMessage").textContent =
+      "Unable to save activity.";
+
+    return;
+
+  }
+
+
+  selectedActivity =
+    null;
+
+
+  $("activitySearchInput").value =
+    "";
+
+
+  $("activityType").value =
+    "";
+
+
+  $("activityDuration").value =
+    "";
+
+
+  $("manualActivityCalories").value =
+    "";
+
+
+  $("selectedActivityCard").hidden =
+    true;
+
+
+  $("estimatedActivityCalories").textContent =
+    "— kcal";
+
+
+  $("activityDate").value =
+    localDateTimeValue();
+
+
+  $("activityMessage").textContent =
+    "Activity saved";
+
+
+  await loadActivities();
+
+  await updateTodayDeficit();
+
+}
+
+
+// ========================================
 // ACTIVITY CHART
 // ========================================
 
@@ -3808,19 +4393,17 @@ function drawActivityChart(
 ) {
 
   const canvas =
-    document.getElementById(
-      "activityChart"
-    );
+    $("activityChart");
 
 
   if (!canvas) {
-
     return;
-
   }
 
 
-  if (activityChartInstance) {
+  if (
+    activityChartInstance
+  ) {
 
     activityChartInstance.destroy();
 
@@ -3831,7 +4414,9 @@ function drawActivityChart(
     new Chart(
       canvas,
       {
-        type: "bar",
+
+        type:
+          "bar",
 
         data: {
 
@@ -3871,42 +4456,1437 @@ function drawActivityChart(
 
 }
 
+
 // ========================================
-// LOGIN / LOGOUT
+// LOAD ACTIVITIES
+// ========================================
+
+async function loadActivities() {
+
+  const {
+    data,
+    error
+  } =
+    await db
+      .from(
+        "activity_entries"
+      )
+      .select("*")
+      .order(
+        "performed_at",
+        {
+          ascending: false
+        }
+      );
+
+
+  if (error) {
+
+    console.error(
+      "Unable to load activities:",
+      error
+    );
+
+    return;
+
+  }
+
+
+  const rows =
+    data || [];
+
+
+  const now =
+    new Date();
+
+
+  const today =
+    new Date();
+
+
+  today.setHours(
+    0,
+    0,
+    0,
+    0
+  );
+
+
+  const sevenDaysAgo =
+    new Date();
+
+
+  sevenDaysAgo.setDate(
+    sevenDaysAgo.getDate() -
+    6
+  );
+
+
+  sevenDaysAgo.setHours(
+    0,
+    0,
+    0,
+    0
+  );
+
+
+  function totalActivityCalories(
+    predicate
+  ) {
+
+    return rows
+      .filter(
+        predicate
+      )
+      .reduce(
+        (
+          total,
+          entry
+        ) =>
+          total +
+          Number(
+            entry.calories_burned ||
+            0
+          ),
+        0
+      );
+
+  }
+
+
+  const todayTotal =
+    totalActivityCalories(
+      entry => {
+
+        const date =
+          new Date(
+            entry.performed_at
+          );
+
+
+        return (
+          date >=
+            today &&
+          date <=
+            now
+        );
+
+      }
+    );
+
+
+  const weekTotal =
+    totalActivityCalories(
+      entry => {
+
+        const date =
+          new Date(
+            entry.performed_at
+          );
+
+
+        return (
+          date >=
+            sevenDaysAgo &&
+          date <=
+            now
+        );
+
+      }
+    );
+
+
+  $("activityToday").textContent =
+    Math.round(
+      todayTotal
+    ) +
+    " kcal";
+
+
+  $("activity7Days").textContent =
+    Math.round(
+      weekTotal
+    ) +
+    " kcal";
+
+
+  $("summaryActivityToday").textContent =
+    Math.round(
+      todayTotal
+    ) +
+    " kcal";
+
+
+  const labels =
+    [];
+
+
+  const values =
+    [];
+
+
+  for (
+    let i = 0;
+    i < 7;
+    i++
+  ) {
+
+    const dayStart =
+      new Date(
+        sevenDaysAgo
+      );
+
+
+    dayStart.setDate(
+      dayStart.getDate() +
+      i
+    );
+
+
+    const dayEnd =
+      new Date(
+        dayStart
+      );
+
+
+    dayEnd.setDate(
+      dayEnd.getDate() +
+      1
+    );
+
+
+    labels.push(
+      dayStart
+        .toLocaleDateString(
+          "en-GB",
+          {
+            day: "2-digit",
+            month: "short"
+          }
+        )
+    );
+
+
+    values.push(
+      Math.round(
+
+        totalActivityCalories(
+          entry => {
+
+            const date =
+              new Date(
+                entry.performed_at
+              );
+
+
+            return (
+              date >=
+                dayStart &&
+              date <
+                dayEnd
+            );
+
+          }
+        )
+
+      )
+    );
+
+  }
+
+
+  drawActivityChart(
+    labels,
+    values
+  );
+
+
+  const area =
+    $("activityHistory");
+
+
+  area.innerHTML =
+    rows.length
+      ? ""
+      : "<p>No activities yet.</p>";
+
+
+  rows.forEach(
+    entry => {
+
+      const date =
+        new Date(
+          entry.performed_at
+        );
+
+
+      const card =
+        document.createElement(
+          "div"
+        );
+
+
+      card.className =
+        "history-card";
+
+
+      card.innerHTML =
+        `
+        <div>
+
+          <strong>
+            ${entry.activity_type}
+          </strong>
+
+          <div class="history-time">
+
+            ${Math.round(
+              Number(
+                entry.duration_minutes
+              )
+            )}
+            min
+
+            ·
+
+            ${date.toLocaleDateString(
+              "en-GB",
+              {
+                day: "2-digit",
+                month: "short",
+                year: "numeric"
+              }
+            )}
+
+            ·
+
+            ${date.toLocaleTimeString(
+              "en-GB",
+              {
+                hour: "2-digit",
+                minute: "2-digit"
+              }
+            )}
+
+          </div>
+
+        </div>
+
+        <div class="history-right">
+
+          <strong>
+            ${Math.round(
+              Number(
+                entry.calories_burned
+              )
+            )}
+            kcal
+          </strong>
+
+          <button
+            type="button"
+            class="delete-entry-btn"
+            data-delete-activity="${entry.id}"
+          >
+            Delete
+          </button>
+
+        </div>
+        `;
+
+
+      area.appendChild(
+        card
+      );
+
+    }
+  );
+
+}
+
+
+// ========================================
+// DELETE ACTIVITY
+// ========================================
+
+async function deleteActivity(
+  id
+) {
+
+  const confirmed =
+    confirm(
+      "Delete this activity?"
+    );
+
+
+  if (!confirmed) {
+    return;
+  }
+
+
+  const {
+    error
+  } =
+    await db
+      .from(
+        "activity_entries"
+      )
+      .delete()
+      .eq(
+        "id",
+        id
+      );
+
+
+  if (error) {
+
+    console.error(
+      error
+    );
+
+
+    alert(
+      "Unable to delete activity."
+    );
+
+
+    return;
+
+  }
+
+
+  await loadActivities();
+
+  await updateTodayDeficit();
+
+}
+
+
+// ========================================
+// DEFICIT + ESTIMATED WEIGHT LOSS
+// ========================================
+
+function setEstimatedLoss(
+  id,
+  deficit
+) {
+
+  const element =
+    $(id);
+
+
+  if (!element) {
+    return;
+  }
+
+
+  if (
+    deficit > 0
+  ) {
+
+    element.textContent =
+      "~" +
+      (
+        deficit /
+        KCAL_PER_KG
+      ).toFixed(2) +
+      " kg";
+
+  } else {
+
+    element.textContent =
+      "0.00 kg";
+
+  }
+
+}
+
+
+// ========================================
+// DEFICIT CHART
+// ========================================
+
+function drawDeficitChart(
+  labels,
+  values
+) {
+
+  const canvas =
+    $("deficitChart");
+
+
+  if (!canvas) {
+    return;
+  }
+
+
+  if (
+    deficitChartInstance
+  ) {
+
+    deficitChartInstance.destroy();
+
+  }
+
+
+  deficitChartInstance =
+    new Chart(
+      canvas,
+      {
+
+        type:
+          "line",
+
+        data: {
+
+          labels:
+            labels,
+
+          datasets: [
+            {
+              label:
+                "Daily Deficit (kcal)",
+
+              data:
+                values,
+
+              tension:
+                0.3
+            }
+          ]
+
+        },
+
+        options: {
+
+          responsive:
+            true,
+
+          scales: {
+
+            y: {
+              beginAtZero:
+                false
+            }
+
+          }
+
+        }
+
+      }
+    );
+
+}
+
+
+// ========================================
+// CALCULATE DEFICIT
+// ========================================
+
+async function updateTodayDeficit() {
+
+  const now =
+    new Date();
+
+
+  const startToday =
+    new Date();
+
+
+  startToday.setHours(
+    0,
+    0,
+    0,
+    0
+  );
+
+
+  const thirtyDaysAgo =
+    new Date(
+      now.getTime() -
+      (
+        30 *
+        86400000
+      )
+    );
+
+
+  const [
+    weightsResult,
+    foodResult,
+    activityResult
+  ] =
+    await Promise.all([
+
+      db
+        .from(
+          "weight_entries"
+        )
+        .select(
+          "weight_kg,recorded_at"
+        )
+        .order(
+          "recorded_at",
+          {
+            ascending:
+              true
+          }
+        ),
+
+      db
+        .from(
+          "calorie_entries"
+        )
+        .select(
+          "calories,eaten_at"
+        )
+        .gte(
+          "eaten_at",
+          thirtyDaysAgo.toISOString()
+        )
+        .lte(
+          "eaten_at",
+          now.toISOString()
+        ),
+
+      db
+        .from(
+          "activity_entries"
+        )
+        .select(
+          "calories_burned,duration_minutes,performed_at"
+        )
+        .gte(
+          "performed_at",
+          thirtyDaysAgo.toISOString()
+        )
+        .lte(
+          "performed_at",
+          now.toISOString()
+        )
+
+    ]);
+
+
+  if (
+    weightsResult.error ||
+    foodResult.error ||
+    activityResult.error
+  ) {
+
+    console.error(
+      "Unable to calculate deficit",
+      weightsResult.error,
+      foodResult.error,
+      activityResult.error
+    );
+
+    return;
+
+  }
+
+
+  const weights =
+    weightsResult.data ||
+    [];
+
+
+  const foods =
+    foodResult.data ||
+    [];
+
+
+  const activities =
+    activityResult.data ||
+    [];
+
+
+  function historicalWeight(
+    date
+  ) {
+
+    let weight =
+      STARTING_WEIGHT;
+
+
+    weights.forEach(
+      entry => {
+
+        if (
+          new Date(
+            entry.recorded_at
+          ) <= date
+        ) {
+
+          weight =
+            Number(
+              entry.weight_kg
+            );
+
+        }
+
+      }
+    );
+
+
+    return weight;
+
+  }
+
+
+  function calculateDayDeficit(
+    dayStart,
+    dayEnd,
+    isToday = false
+  ) {
+
+    const weight =
+      historicalWeight(
+        dayEnd
+      );
+
+
+    const dailyExpenditure =
+      calculateBMR(
+        weight
+      ) *
+      ACTIVITY_MULTIPLIER;
+
+
+    const fractionOfDay =
+      isToday
+        ? Math.max(
+            0,
+            Math.min(
+              1,
+              (
+                now -
+                dayStart
+              ) /
+              86400000
+            )
+          )
+        : 1;
+
+
+    const baseline =
+      dailyExpenditure *
+      fractionOfDay;
+
+
+    const foodCalories =
+      foods
+        .filter(
+          entry => {
+
+            const date =
+              new Date(
+                entry.eaten_at
+              );
+
+
+            return (
+              date >=
+                dayStart &&
+              date <
+                dayEnd
+            );
+
+          }
+        )
+        .reduce(
+          (
+            total,
+            entry
+          ) =>
+            total +
+            Number(
+              entry.calories
+            ),
+          0
+        );
+
+
+    let extraActivity =
+      0;
+
+
+    activities
+      .filter(
+        entry => {
+
+          const date =
+            new Date(
+              entry.performed_at
+            );
+
+
+          return (
+            date >=
+              dayStart &&
+            date <
+              dayEnd
+          );
+
+        }
+      )
+      .forEach(
+        entry => {
+
+          const grossCalories =
+            Number(
+              entry.calories_burned
+            ) ||
+            0;
+
+
+          const duration =
+            Number(
+              entry.duration_minutes
+            ) ||
+            0;
+
+
+          const baselineDuringActivity =
+            (
+              dailyExpenditure /
+              1440
+            ) *
+            duration;
+
+
+          extraActivity +=
+            Math.max(
+              0,
+              grossCalories -
+              baselineDuringActivity
+            );
+
+        }
+      );
+
+
+    return (
+      baseline +
+      extraActivity -
+      foodCalories
+    );
+
+  }
+
+
+  // --------------------------------------
+  // TODAY
+  // --------------------------------------
+
+  const todayDeficit =
+    calculateDayDeficit(
+      startToday,
+      now,
+      true
+    );
+
+
+  $("summaryDeficitToday").textContent =
+    Math.round(
+      todayDeficit
+    ) +
+    " kcal";
+
+
+  setEstimatedLoss(
+    "estimatedWeightLossToday",
+    todayDeficit
+  );
+
+
+  // --------------------------------------
+  // START DEFICIT HISTORY FROM FIRST
+  // RECORDED FOOD ENTRY
+  // --------------------------------------
+
+  const foodDates =
+    foods.map(
+      entry =>
+        new Date(
+          entry.eaten_at
+        )
+    );
+
+
+  if (
+    foodDates.length === 0
+  ) {
+
+    $("summaryDeficit7Days").textContent =
+      "—";
+
+
+    $("summaryDeficit30Days").textContent =
+      "—";
+
+
+    $("estimatedWeightLoss7Days").textContent =
+      "—";
+
+
+    $("estimatedWeightLoss30Days").textContent =
+      "—";
+
+
+    if (
+      $("estimatedWeightEquivalent")
+    ) {
+
+      $("estimatedWeightEquivalent").textContent =
+        "—";
+
+    }
+
+
+    drawDeficitChart(
+      [],
+      []
+    );
+
+
+    return;
+
+  }
+
+
+  const firstFood =
+    new Date(
+      Math.min(
+        ...foodDates.map(
+          date =>
+            date.getTime()
+        )
+      )
+    );
+
+
+  const trackingStart =
+    firstFood >
+      thirtyDaysAgo
+      ? firstFood
+      : thirtyDaysAgo;
+
+
+  let cursor =
+    new Date(
+      trackingStart
+    );
+
+
+  cursor.setHours(
+    0,
+    0,
+    0,
+    0
+  );
+
+
+  const days =
+    [];
+
+
+  while (
+    cursor <= now
+  ) {
+
+    const dayStart =
+      new Date(
+        cursor
+      );
+
+
+    const nextDay =
+      new Date(
+        dayStart
+      );
+
+
+    nextDay.setDate(
+      nextDay.getDate() +
+      1
+    );
+
+
+    const isToday =
+      dayStart.toDateString() ===
+      now.toDateString();
+
+
+    const deficit =
+      calculateDayDeficit(
+        dayStart,
+        isToday
+          ? now
+          : nextDay,
+        isToday
+      );
+
+
+    days.push({
+
+      date:
+        dayStart,
+
+      deficit:
+        deficit
+
+    });
+
+
+    cursor =
+      nextDay;
+
+  }
+
+
+  const last7Days =
+    days.slice(
+      -7
+    );
+
+
+  const last30Days =
+    days.slice(
+      -30
+    );
+
+
+  const deficit7Days =
+    last7Days.reduce(
+      (
+        total,
+        day
+      ) =>
+        total +
+        day.deficit,
+      0
+    );
+
+
+  const deficit30Days =
+    last30Days.reduce(
+      (
+        total,
+        day
+      ) =>
+        total +
+        day.deficit,
+      0
+    );
+
+
+  $("summaryDeficit7Days").textContent =
+    Math.round(
+      deficit7Days
+    ) +
+    " kcal";
+
+
+  $("summaryDeficit30Days").textContent =
+    Math.round(
+      deficit30Days
+    ) +
+    " kcal";
+
+
+  $("summary7DaysLabel").textContent =
+    last7Days.length < 7
+      ? "Deficit — " +
+        last7Days.length +
+        " days tracked"
+      : "Last 7 Days";
+
+
+  $("summary30DaysLabel").textContent =
+    last30Days.length < 30
+      ? "Deficit — " +
+        last30Days.length +
+        " days tracked"
+      : "Last 30 Days";
+
+
+  setEstimatedLoss(
+    "estimatedWeightLoss7Days",
+    deficit7Days
+  );
+
+
+  setEstimatedLoss(
+    "estimatedWeightLoss30Days",
+    deficit30Days
+  );
+
+
+  if (
+    $("estimatedWeightEquivalent")
+  ) {
+
+    $("estimatedWeightEquivalent").textContent =
+      deficit30Days > 0
+        ? (
+            deficit30Days /
+            KCAL_PER_KG
+          ).toFixed(2) +
+          " kg"
+        : "0.00 kg";
+
+  }
+
+
+  drawDeficitChart(
+
+    last30Days.map(
+      day =>
+        day.date
+          .toLocaleDateString(
+            "en-GB",
+            {
+              day:
+                "2-digit",
+
+              month:
+                "short"
+            }
+          )
+    ),
+
+    last30Days.map(
+      day =>
+        Math.round(
+          day.deficit
+        )
+    )
+
+  );
+
+}
+
+
+// ========================================
+// MAIN EVENT HANDLERS
+// ========================================
+
+$("startFastBtn")
+  .addEventListener(
+    "click",
+    startFast
+  );
+
+
+$("stopFastBtn")
+  .addEventListener(
+    "click",
+    stopFast
+  );
+
+
+$("saveWeightBtn")
+  .addEventListener(
+    "click",
+    saveWeight
+  );
+
+
+$("saveCaloriesBtn")
+  .addEventListener(
+    "click",
+    saveCalories
+  );
+
+
+$("saveActivityBtn")
+  .addEventListener(
+    "click",
+    saveActivity
+  );
+
+
+// ========================================
+// FOOD MODE BUTTONS
+// ========================================
+
+$("foodSearchModeBtn")
+  .addEventListener(
+    "click",
+    () => {
+
+      setFoodMode(
+        "search"
+      );
+
+    }
+  );
+
+
+$("manualCaloriesModeBtn")
+  .addEventListener(
+    "click",
+    () => {
+
+      setFoodMode(
+        "manual"
+      );
+
+    }
+  );
+
+
+// ========================================
+// FOOD SEARCH EVENTS
+// ========================================
+
+$("foodSearchInput")
+  .addEventListener(
+    "input",
+    searchLocalFoods
+  );
+
+
+$("foodSearchInput")
+  .addEventListener(
+    "keydown",
+    event => {
+
+      if (
+        event.key ===
+        "Enter"
+      ) {
+
+        event.preventDefault();
+
+
+        const query =
+          event.currentTarget
+            .value
+            .trim();
+
+
+        if (
+          query.length >= 2
+        ) {
+
+          searchOpenFoodFacts(
+            query
+          );
+
+        }
+
+      }
+
+    }
+  );
+
+
+$("foodAmount")
+  .addEventListener(
+    "input",
+    calculateSelectedFoodCalories
+  );
+
+
+$("foodSearchResults")
+  .addEventListener(
+    "click",
+    event => {
+
+      const button =
+        event.target.closest(
+          "button.suggestion-item"
+        );
+
+
+      if (
+        button &&
+        button._food
+      ) {
+
+        selectFood(
+          button._food
+        );
+
+      }
+
+    }
+  );
+
+
+// ========================================
+// ACTIVITY SEARCH EVENTS
+// ========================================
+
+$("activitySearchInput")
+  .addEventListener(
+    "input",
+    showActivitySuggestions
+  );
+
+
+$("activitySearchResults")
+  .addEventListener(
+    "click",
+    event => {
+
+      const button =
+        event.target.closest(
+          "button.suggestion-item"
+        );
+
+
+      if (
+        button &&
+        button._activity
+      ) {
+
+        selectActivity(
+          button._activity
+        );
+
+      }
+
+    }
+  );
+
+
+$("activityDuration")
+  .addEventListener(
+    "input",
+    updateActivityEstimate
+  );
+
+
+// ========================================
+// DELETE BUTTONS
+// ========================================
+
+document.addEventListener(
+  "click",
+  event => {
+
+    const fastButton =
+      event.target.closest(
+        "[data-delete-fast]"
+      );
+
+
+    const weightButton =
+      event.target.closest(
+        "[data-delete-weight]"
+      );
+
+
+    const calorieButton =
+      event.target.closest(
+        "[data-delete-calorie]"
+      );
+
+
+    const activityButton =
+      event.target.closest(
+        "[data-delete-activity]"
+      );
+
+
+    if (
+      fastButton
+    ) {
+
+      deleteFast(
+        fastButton.dataset.deleteFast
+      );
+
+    }
+
+
+    if (
+      weightButton
+    ) {
+
+      deleteWeight(
+        weightButton.dataset.deleteWeight
+      );
+
+    }
+
+
+    if (
+      calorieButton
+    ) {
+
+      deleteCalories(
+        calorieButton.dataset.deleteCalorie
+      );
+
+    }
+
+
+    if (
+      activityButton
+    ) {
+
+      deleteActivity(
+        activityButton.dataset.deleteActivity
+      );
+
+    }
+
+
+    if (
+      !event.target.closest(
+        ".search-wrap"
+      )
+    ) {
+
+      $("foodSearchResults").hidden =
+        true;
+
+
+      $("activitySearchResults").hidden =
+        true;
+
+    }
+
+  }
+);
+
+
+// ========================================
+// AUTHENTICATION
 // ========================================
 
 const mainApp =
-  document.querySelector(".app");
+  document.querySelector(
+    ".app"
+  );
+
 
 const loginScreen =
-  document.getElementById(
-    "loginScreen"
-  );
+  $("loginScreen");
+
 
 const loginEmail =
-  document.getElementById(
-    "loginEmail"
-  );
+  $("loginEmail");
+
 
 const loginPassword =
-  document.getElementById(
-    "loginPassword"
-  );
+  $("loginPassword");
+
 
 const loginBtn =
-  document.getElementById(
-    "loginBtn"
-  );
+  $("loginBtn");
+
 
 const loginMessage =
-  document.getElementById(
-    "loginMessage"
-  );
+  $("loginMessage");
+
 
 const logoutBtn =
-  document.getElementById(
-    "logoutBtn"
-  );
+  $("logoutBtn");
 
 
 // ----------------------------------------
@@ -3918,21 +5898,33 @@ async function loadAuthenticatedApp() {
   loginScreen.style.display =
     "none";
 
+
   mainApp.style.display =
     "";
 
 
-  await loadActiveFast();
+  setDefaultDates();
 
-  await loadFastingHistory();
 
-  await loadWeights();
+  setFoodMode(
+    "search"
+  );
 
-  await loadCalories();
 
-  await loadActivities();
+  await Promise.all([
 
-  await loadFastingSummary();
+    loadActiveFast(),
+
+    loadFastingHistory(),
+
+    loadWeights(),
+
+    loadCalories(),
+
+    loadActivities()
+
+  ]);
+
 
   await updateTodayDeficit();
 
@@ -3946,10 +5938,13 @@ async function loadAuthenticatedApp() {
 async function checkLogin() {
 
   const {
-    data: { session },
+    data: {
+      session
+    },
     error
   } =
-    await db.auth.getSession();
+    await db.auth
+      .getSession();
 
 
   if (error) {
@@ -3962,14 +5957,17 @@ async function checkLogin() {
   }
 
 
-  if (session) {
+  if (
+    session
+  ) {
 
     await loadAuthenticatedApp();
 
   } else {
 
     loginScreen.style.display =
-      "block";
+      "flex";
+
 
     mainApp.style.display =
       "none";
@@ -3983,94 +5981,100 @@ async function checkLogin() {
 // LOGIN
 // ----------------------------------------
 
-loginBtn.addEventListener(
-  "click",
-  async () => {
+async function login() {
 
-    const email =
-      loginEmail.value.trim();
-
-    const password =
-      loginPassword.value;
+  const email =
+    loginEmail
+      .value
+      .trim();
 
 
-    if (
-      !email ||
-      !password
-    ) {
-
-      loginMessage.textContent =
-        "Please enter your email and password.";
-
-      return;
-
-    }
+  const password =
+    loginPassword
+      .value;
 
 
-    loginBtn.disabled =
-      true;
+  if (
+    !email ||
+    !password
+  ) {
 
     loginMessage.textContent =
-      "Logging in...";
+      "Please enter your email and password.";
 
-
-    const {
-      data,
-      error
-    } =
-      await db.auth
-        .signInWithPassword({
-          email: email,
-          password: password
-        });
-
-
-    if (error) {
-
-      console.error(
-        "Login error:",
-        error
-      );
-
-      loginMessage.textContent =
-        "Unable to log in. Check your email and password.";
-
-      loginBtn.disabled =
-        false;
-
-      return;
-
-    }
-
-
-    if (!data.session) {
-
-      loginMessage.textContent =
-        "Unable to log in.";
-
-      loginBtn.disabled =
-        false;
-
-      return;
-
-    }
-
-
-    loginMessage.textContent =
-      "";
-
-    loginBtn.disabled =
-      false;
-
-
-    await loadAuthenticatedApp();
+    return;
 
   }
+
+
+  loginBtn.disabled =
+    true;
+
+
+  loginMessage.textContent =
+    "Logging in...";
+
+
+  const {
+    data,
+    error
+  } =
+    await db.auth
+      .signInWithPassword({
+
+        email:
+          email,
+
+        password:
+          password
+
+      });
+
+
+  loginBtn.disabled =
+    false;
+
+
+  if (
+    error ||
+    !data.session
+  ) {
+
+    console.error(
+      "Login error:",
+      error
+    );
+
+
+    loginMessage.textContent =
+      "Unable to log in. Check your email and password.";
+
+    return;
+
+  }
+
+
+  loginMessage.textContent =
+    "";
+
+
+  await loadAuthenticatedApp();
+
+}
+
+
+// ----------------------------------------
+// LOGIN BUTTON
+// ----------------------------------------
+
+loginBtn.addEventListener(
+  "click",
+  login
 );
 
 
 // ----------------------------------------
-// PRESS ENTER TO LOGIN
+// ENTER KEY LOGIN
 // ----------------------------------------
 
 loginPassword.addEventListener(
@@ -4078,10 +6082,11 @@ loginPassword.addEventListener(
   event => {
 
     if (
-      event.key === "Enter"
+      event.key ===
+      "Enter"
     ) {
 
-      loginBtn.click();
+      login();
 
     }
 
@@ -4097,8 +6102,11 @@ logoutBtn.addEventListener(
   "click",
   async () => {
 
-    const { error } =
-      await db.auth.signOut();
+    const {
+      error
+    } =
+      await db.auth
+        .signOut();
 
 
     if (error) {
@@ -4113,16 +6121,19 @@ logoutBtn.addEventListener(
     }
 
 
-    if (timerInterval) {
+    if (
+      timerInterval
+    ) {
 
       clearInterval(
         timerInterval
       );
 
-      timerInterval =
-        null;
-
     }
+
+
+    timerInterval =
+      null;
 
 
     activeFast =
@@ -4132,15 +6143,18 @@ logoutBtn.addEventListener(
     loginEmail.value =
       "";
 
+
     loginPassword.value =
       "";
+
 
     loginMessage.textContent =
       "";
 
 
     loginScreen.style.display =
-      "block";
+      "flex";
+
 
     mainApp.style.display =
       "none";
@@ -4152,5 +6166,7 @@ logoutBtn.addEventListener(
 // ========================================
 // START APP
 // ========================================
+
+setDefaultDates();
 
 checkLogin();
